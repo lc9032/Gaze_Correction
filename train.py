@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 
 
 import numpy as np
-# file_path = './training_inputs_x/left_data.pkl'
-file_path = './training_inputs_x/right_data.pkl'
+file_path = './training_inputs_x/left_data.pkl'
+# file_path = './training_inputs_x/right_data.pkl'
 
 
 def load_pickle_data(file_path):
@@ -70,7 +70,7 @@ generator = Generator()
 
 # generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 # generator_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5)
-generator_optimizer = tf.keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.9)
+generator_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.9)
 
 
 gan_model = GazeRedirectGAN(generator)#, discriminator, vgg_model)
@@ -109,7 +109,8 @@ class CheckpointSaver(tf.keras.callbacks.Callback):
         print(f'\nCheckpoint saved at epoch {epoch + 1}')
 
 # Train the GAN model with checkpoint saving
-epochs = 1
+epochs = 20
+
 gan_model.fit(train_dataset, epochs=epochs, callbacks=[CheckpointSaver()])
 
 
@@ -182,7 +183,7 @@ def unnormalize_image(image):
 
 # Load the test image
 
-test_image_path = './preprocessing_dataset/0029/left/0029_2m_0P_-10V_-10H.jpg'
+test_image_path = './preprocessing_dataset/0029/right/0029_2m_0P_10V_10H.jpg'
 test_image = load_and_preprocess_image(test_image_path)
 
 test_image = tf.cast(test_image, tf.float32)
@@ -190,7 +191,7 @@ test_image = tf.cast(test_image, tf.float32)
 
 test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension
 
-tar_img_ph = './preprocessing_dataset/0029/left/0029_2m_0P_0V_0H.jpg'
+tar_img_ph = './preprocessing_dataset/0029/right/0029_2m_0P_0V_0H.jpg'
 tar_img = load_and_preprocess_image(tar_img_ph)
 tar_img = tf.cast(tar_img, tf.float32)
 
@@ -241,4 +242,3 @@ axes[2].axis('off')
 
 plt.savefig('./result.png')
 plt.close(fig)
-

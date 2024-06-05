@@ -72,6 +72,8 @@ def create_pickle_data(img_list, save_path, eye_type):
 
 # Process right eye images
 # right_img_list = glob.glob(dataset_dir + '/*/right/*.jpg')
-right_img_list = glob.glob(dataset_dir + '/0006/right/*.jpg')
+# right_img_list = glob.glob(dataset_dir + '/0006/right/*.jpg')
+
+right_img_list = glob.glob(dataset_dir + '/0029/right/*.jpg')
 right_img_list.sort()
 create_pickle_data(right_img_list, save_pickle_path, 'right')

@@ -3,6 +3,5 @@ result*.*
 
 /__pycache__/
 /preprocessing_dataset/
-/training_checkpoints/
-/training_checkpoints_old/
-/training_inputs_x/
+/training_checkpoints*/
+/training_inputs*/
