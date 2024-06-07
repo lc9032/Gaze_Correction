@@ -70,7 +70,7 @@ generator = Generator()
 
 # generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 # generator_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5)
-generator_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.9)
+generator_optimizer = tf.keras.optimizers.Adam(learning_rate=0.00002, beta_1=0.9)
 
 
 gan_model = GazeRedirectGAN(generator)#, discriminator, vgg_model)
@@ -109,7 +109,7 @@ class CheckpointSaver(tf.keras.callbacks.Callback):
         print(f'\nCheckpoint saved at epoch {epoch + 1}')
 
 # Train the GAN model with checkpoint saving
-epochs = 100
+epochs = 300
 
 gan_model.fit(train_dataset, epochs=epochs, callbacks=[CheckpointSaver()])
 
