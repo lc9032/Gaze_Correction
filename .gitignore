@@ -1,5 +1,7 @@
 framework.jpg
 result*.*
+*.jpg
+*.png
 
 /__pycache__/
 /preprocessing_dataset/

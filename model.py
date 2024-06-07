@@ -1,10 +1,12 @@
 from tensorflow.keras import layers, models
 from tensorflow.keras.layers import Conv2D, ReLU, Conv2DTranspose, Activation, LayerNormalization, Add, Concatenate, BatchNormalization
 import tensorflow as tf
-import tf_slim as slim
+# import tf_slim as slim
 
-import matplotlib.pyplot as plt
-import numpy as np
+# import matplotlib.pyplot as plt
+# import numpy as np
+
+import tensorflow_addons as tfa
 
 
 class ConvBlock(layers.Layer):
@@ -164,7 +166,8 @@ class Generator(tf.keras.Model):
 
         # Warp the input image using the flow field
         warped_image = self.warp(input_image, flow_x)
-
+        
+        # print("!!!!!!!!!!!!!!")
         # print("warped_image:" , warped_image)
 
         # Adjust brightness using the brightness map
@@ -173,42 +176,124 @@ class Generator(tf.keras.Model):
         # print("output_image:" , output_image)
 
 
-        return x
+        return output_image
+
+    def remove_duplicate_points(self, source_points, dest_points):
+        """
+        Remove duplicate points from source_points and the corresponding points in dest_points.
+        
+        Args:
+            source_points (tf.Tensor): The source points tensor of shape [batch_size, num_points, 2].
+            dest_points (tf.Tensor): The destination points tensor of shape [batch_size, num_points, 2].
+        
+        Returns:
+            tuple: Two tensors representing the unique source and destination points.
+        """
+        def unique_points(points, other_points):
+
+            reshaped_points = tf.reshape(points, [-1, 2])
+            reshaped_other_points = tf.reshape(other_points, [-1, 2])
+
+            flattened_points = tf.strings.reduce_join(tf.as_string(reshaped_points), axis=1, separator=',')
+            
+            # Find unique values
+            unique_points, idx = tf.unique(flattened_points)
+
+
+            first_occurrence_indices = tf.math.unsorted_segment_min(tf.range(tf.size(flattened_points)), idx, tf.size(unique_points))
+            
+            # Split back to original shape
+            unique_points = tf.strings.split(unique_points, ',')
+            
+            # Convert strings to numbers
+            unique_points = tf.strings.to_number(unique_points)
+            
+            # Reshape to original shape
+            unique_points = tf.reshape(unique_points, [-1, 2])
+            
+            # Gather corresponding destination points
+            unique_dest_points = tf.gather(reshaped_other_points, first_occurrence_indices)
+
+            max_points = 8
+            if unique_points.shape[0]:
+                max_points = min(unique_points.shape[0], unique_dest_points.shape[0])
+
+            if max_points is not None:
+                unique_points = unique_points[:max_points]
+                unique_dest_points = unique_dest_points[:max_points]
+                padding = [[0, max_points - tf.shape(unique_points)[0]], [0, 0]]
+                unique_points = tf.pad(unique_points, padding)
+                unique_dest_points = tf.pad(unique_dest_points, padding)
+
+            return unique_points, unique_dest_points
+        
+        unique_source_points, unique_dest_points = tf.map_fn(
+            lambda x: unique_points(x[0], x[1]), 
+            (source_points, dest_points), 
+            dtype=(tf.float32, tf.float32)
+        )
+
+        return unique_source_points, unique_dest_points
 
 
     def warp(self, input_image, flow_field):
-        batch_size, height, width, channels = tf.shape(input_image)[0], tf.shape(input_image)[1], tf.shape(input_image)[2], tf.shape(input_image)[3]
-        # width_f = tf.cast(width, tf.float32)
-        # height_f = tf.cast(height, tf.float32)
-        
-        # Generate a grid of coordinates
-        grid_x, grid_y = tf.meshgrid(tf.range(width), tf.range(height))
-        grid_x = tf.cast(grid_x, tf.float32)
-        grid_y = tf.cast(grid_y, tf.float32)
 
-        grid = tf.stack([grid_y, grid_x], axis=-1)
-        grid = tf.expand_dims(grid, axis=0)
-        grid = tf.tile(grid, [batch_size, 1, 1, 1])
-        
-        # Apply flow field to the grid
-        new_coords = grid + flow_field
-        
-        # Normalize coordinates to [-1, 1] range
-        # new_coords = new_coords / tf.constant([height_f - 1, width_f - 1]) * 2.0 - 1.0
-        new_coords = new_coords / tf.constant([32.0 - 1.0, 64.0 - 1.0]) * 2.0 - 1.0
-        
-        # Reshape new_coords to be compatible with tf.image.resize
-        new_coords = tf.stack([new_coords[..., 1], new_coords[..., 0]], axis=-1)
-        
-        # Perform bilinear sampling
-        # warped_image = tf.keras.layers.Lambda(
-        #     lambda args: tf.keras.backend.resize_images(args[0], height, width, data_format='channels_last', interpolation='bilinear')
-        # )([input_image, new_coords])
-        warped_image = tf.keras.layers.Lambda(
-            lambda args: tf.keras.backend.resize_images(args[0], 32, 64, data_format='channels_last', interpolation='bilinear')
-        )([input_image, new_coords])
-        
+        batch_size, height, width, channels = tf.shape(input_image)[0], tf.shape(input_image)[1], tf.shape(input_image)[2], tf.shape(input_image)[3]
+
+        source_points = flow_field[..., :32, :]
+        dest_points = flow_field[..., 32:, :]
+        # source_points = flow_field[..., :1, :]
+        # dest_points = flow_field[..., 1:2, :]
+
+        warped_image = input_image
+
+        source_points = tf.reshape(source_points, [batch_size, -1, 2])
+        dest_points = tf.reshape(dest_points, [batch_size, -1, 2])
+
+        source_points = (source_points + 1.0) / 2.0
+        source_points_y = source_points[..., 0] * (24.0 - 1.0) + 4.0
+        source_points_x = source_points[..., 1] * (48.0 - 1.0) + 8.0
+        source_points = tf.stack([source_points_y, source_points_x], axis=-1)
+
+        # dest_points = (dest_points + 1.0) / 2.0
+        dest_points_y = source_points_y + dest_points[..., 0] * (1.0)
+        dest_points_x = source_points_x + dest_points[..., 1] * (6.0)
+        dest_points = tf.stack([dest_points_y, dest_points_x], axis=-1)
+
+        new_source_points = tf.constant([[[0.0, 0.0], [32.0, 0.0], [0.0, 64.0], [32.0, 64.0],
+                                          [16.0, 0.0], [0.0, 32.0], [32.0, 32.0], [16.0, 64.0]]], dtype=tf.float32)
+        new_dest_points = tf.constant([[[0.0, 0.0], [32.0, 0.0], [0.0, 64.0], [32.0, 64.0],
+                                        [16.0, 0.0], [0.0, 32.0], [32.0, 32.0], [16.0, 64.0]]], dtype=tf.float32)
+        new_source_points = tf.tile(new_source_points, [batch_size, 1, 1])
+        new_dest_points = tf.tile(new_dest_points, [batch_size, 1, 1])
+
+        source_points = tf.concat([new_source_points, source_points], axis=1)
+        dest_points = tf.concat([new_dest_points, dest_points], axis=1)
+
+        source_points,dest_points = self.remove_duplicate_points(source_points, dest_points)
+        dest_points,source_points = self.remove_duplicate_points(dest_points, source_points)
+
+
+        # source_points_t = tf.constant([[[0.0, 0.0], [32.0, 0.0], [0.0, 64.0], [32.0, 64.0],
+        #                                 [16.0, 0.0], [0.0, 32.0], [32.0, 32.0], [16.0, 64.0],
+        #                                 [14.0, 10.0], [0.0, 23.0], [2.0, 44.0], [23.0, 20.0], [24.0, 39.0], [20.0, 59.0],
+        #                                 [13.0, 22.0], [3.0, 32.0], [22.0, 32.0], [12.0, 42.0],
+        #                                 [8.0, 22.0]]], dtype=tf.float32)
+        # dest_points_t = tf.constant(  [[[0.0, 0.0], [32.0, 0.0], [0.0, 64.0], [32.0, 64.0],
+        #                                 [16.0, 0.0], [0.0, 32.0], [32.0, 32.0], [16.0, 64.0],
+        #                                 [14.0, 10.0], [0.0, 23.0], [2.0, 44.0], [23.0, 20.0], [24.0, 39.0], [20.0, 59.0],
+        #                                 [13.0, 26.0], [3.0, 36.0], [22.0, 36.0], [12.0, 46.0],
+        #                                 [8.0, 28.0]]], dtype=tf.float32)
+
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(source_points)
+        print(dest_points)
+
+        warped_image, _ = tfa.image.sparse_image_warp(warped_image, source_points, dest_points)
+
         return warped_image
+
+
 
     # def warp(self, input_image, flow_field):
     #     # batch_size, height, width, channels = tf.shape(input_image)
@@ -250,6 +335,45 @@ class Generator(tf.keras.Model):
     #     warped_image = tf.reshape(warped_image_flat, [batch_size, height, width, channels])
 
     #     return warped_image
+
+    # def warp(self, input_image, flow_field):
+    #     batch_size, height, width, channels = tf.shape(input_image)[0], tf.shape(input_image)[1], tf.shape(input_image)[2], tf.shape(input_image)[3]
+    #     # width_f = tf.cast(width, tf.float32)
+    #     # height_f = tf.cast(height, tf.float32)
+        
+    #     # Generate a grid of coordinates
+    #     grid_x, grid_y = tf.meshgrid(tf.range(width), tf.range(height))
+    #     grid_x = tf.cast(grid_x, tf.float32)
+    #     grid_y = tf.cast(grid_y, tf.float32)
+
+    #     grid = tf.stack([grid_y, grid_x], axis=-1)
+    #     grid = tf.expand_dims(grid, axis=0)
+    #     grid = tf.tile(grid, [batch_size, 1, 1, 1])
+        
+    #     # Apply flow field to the grid
+    #     new_coords = grid + flow_field
+        
+    #     # Normalize coordinates to [-1, 1] range
+    #     # new_coords = new_coords / tf.constant([height_f - 1, width_f - 1]) * 2.0 - 1.0
+    #     new_coords = new_coords / tf.constant([32.0 - 1.0, 64.0 - 1.0]) * 20.0 - 10.0
+        
+    #     # Reshape new_coords to be compatible with tf.image.resize
+    #     new_coords = tf.stack([new_coords[..., 1], new_coords[..., 0]], axis=-1)
+        
+    #     # # Perform bilinear sampling
+    #     # warped_image = tf.keras.layers.Lambda(
+    #     #     lambda args: tf.keras.backend.resize_images(args[0], height, width, data_format='channels_last', interpolation='bilinear')
+    #     # )([input_image, new_coords])
+    #     # warped_image = tf.keras.layers.Lambda(
+    #     #     lambda args: tf.keras.backend.resize_images(args[0], 1, 1, data_format='channels_last', interpolation='bilinear')
+    #     # )([input_image, flow_field])
+
+    #     # warped_image = tf.contrib.resampler.resampler(input_image, new_coords)
+
+    #     warped_image = tfa.image.dense_image_warp(input_image, new_coords)
+        
+    #     return warped_image
+
 
     def adjust_brightness(self, warped_image, brightness_map):
         brightness_map = tf.image.resize(brightness_map, (tf.shape(warped_image)[1], tf.shape(warped_image)[2]))

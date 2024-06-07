@@ -35,7 +35,7 @@ def create_pickle_data(img_list, save_path, eye_type):
         for img_path_t in img_list:
             img_t, person_id_t, distance_t, head_pose_t, gaze_v_t, gaze_h_t = process_image(img_path_t)
 
-            if person_id == person_id_t and head_pose == head_pose_t and gaze_h_t == 0 and gaze_v_t == 0:
+            if person_id == person_id_t and head_pose == head_pose_t and gaze_h_t == 0 and gaze_v_t == 0 and int(person_id) > 20 and int(person_id) < 30:
                 data['img'].append(img)
                 # data['img'].append(img_path)
                 data['p'].append(head_pose)
@@ -74,6 +74,6 @@ def create_pickle_data(img_list, save_path, eye_type):
 # right_img_list = glob.glob(dataset_dir + '/*/right/*.jpg')
 # right_img_list = glob.glob(dataset_dir + '/0006/right/*.jpg')
 
-right_img_list = glob.glob(dataset_dir + '/0029/right/*.jpg')
+right_img_list = glob.glob(dataset_dir + '/*/right/*.jpg')
 right_img_list.sort()
 create_pickle_data(right_img_list, save_pickle_path, 'right')

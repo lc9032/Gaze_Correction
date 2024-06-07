@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 
 
 import numpy as np
-file_path = './training_inputs_x/left_data.pkl'
-# file_path = './training_inputs_x/right_data.pkl'
+# file_path = './training_inputs_x/left_data.pkl'
+file_path = './training_inputs_x/right_data.pkl'
 
 
 def load_pickle_data(file_path):
@@ -109,7 +109,7 @@ class CheckpointSaver(tf.keras.callbacks.Callback):
         print(f'\nCheckpoint saved at epoch {epoch + 1}')
 
 # Train the GAN model with checkpoint saving
-epochs = 20
+epochs = 100
 
 gan_model.fit(train_dataset, epochs=epochs, callbacks=[CheckpointSaver()])
 
@@ -183,7 +183,7 @@ def unnormalize_image(image):
 
 # Load the test image
 
-test_image_path = './preprocessing_dataset/0029/right/0029_2m_0P_10V_10H.jpg'
+test_image_path = './preprocessing_dataset/0029/right/0029_2m_0P_0V_-15H.jpg'
 test_image = load_and_preprocess_image(test_image_path)
 
 test_image = tf.cast(test_image, tf.float32)
