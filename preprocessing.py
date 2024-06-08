@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import pickle
 
-dataset_dir = './preprocessing_dataset'
+dataset_dir = './preprocessing_dataset_NEW'
 image_width = 64
 image_height = 32
 save_pickle_path = './training_inputs_x'
@@ -26,14 +26,42 @@ def process_image(img_path):
     
     return img, person_id, distance, head_pose, gaze_v, gaze_h
 
+def read_landmarks_from_txt(file_path):
+    landmarks = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            x, y = map(int, line.strip().split(','))
+            landmarks.append((x, y))
+    return landmarks
+
 def create_pickle_data(img_list, save_path, eye_type):
-    data = {'img': [], 'p': [], 'h': [], 'v': [], 'img_t': [], 'p_t': [], 'h_t': [], 'v_t': []}
+    data = {'img': [], 'p': [], 'h': [], 'v': [], 'img_t': [], 'p_t': [], 'h_t': [], 'v_t': [], 'landmarks': [], 'landmarks_t': []}
     
     for img_path in img_list:
         img, person_id, distance, head_pose, gaze_v, gaze_h = process_image(img_path)
 
+        dir_name, file_name = os.path.split(img_path)
+        dir_parts = dir_name.split('/')
+        dir_parts.insert(-1, 'info')
+        modified_dir_name = '/'.join(dir_parts)
+        file_name_without_extension = os.path.splitext(file_name)[0]
+        modified_file_name = file_name_without_extension + ".txt"
+        modified_file_path = os.path.join(modified_dir_name, modified_file_name)
+        eye_landmarks = read_landmarks_from_txt(modified_file_path)
+
+        print(eye_landmarks)
+
         for img_path_t in img_list:
             img_t, person_id_t, distance_t, head_pose_t, gaze_v_t, gaze_h_t = process_image(img_path_t)
+
+            dir_name, file_name = os.path.split(img_path)
+            dir_parts = dir_name.split('/')
+            dir_parts.insert(-1, 'info')
+            modified_dir_name = '/'.join(dir_parts)
+            file_name_without_extension = os.path.splitext(file_name)[0]
+            modified_file_name = file_name_without_extension + ".txt"
+            modified_file_path = os.path.join(modified_dir_name, modified_file_name)
+            eye_landmarks_t = read_landmarks_from_txt(modified_file_path)
 
             if person_id == person_id_t and head_pose == head_pose_t and gaze_h_t == 0 and gaze_v_t == 0 and int(person_id) > 20 and int(person_id) < 30:
                 data['img'].append(img)
@@ -41,12 +69,14 @@ def create_pickle_data(img_list, save_path, eye_type):
                 data['p'].append(head_pose)
                 data['h'].append(gaze_h)
                 data['v'].append(gaze_v)
+                data['landmarks'].append(eye_landmarks)
 
                 data['img_t'].append(img_t)
                 # data['img_t'].append(img_path_t)
                 data['p_t'].append(head_pose_t)
                 data['h_t'].append(gaze_h_t)
                 data['v_t'].append(gaze_v_t)
+                data['landmarks_t'].append(eye_landmarks_t)
 
                 print(img_path, img_path_t)
 

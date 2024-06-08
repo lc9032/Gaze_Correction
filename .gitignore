@@ -4,6 +4,7 @@ result*.*
 *.png
 
 /__pycache__/
-/preprocessing_dataset/
+/preprocessing_dataset*/
 /training_checkpoints*/
 /training_inputs*/
+
