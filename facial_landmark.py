@@ -9,7 +9,7 @@ class facial_landmark:
     def __init__(self):
         pass
 
-    def extract_eye_regions(self, frame, landmarks, top_margin=80, bottom_mergin=60,right_mergin=40,left_mergin=40):
+    def extract_eye_regions(self, frame, landmarks, top_margin=10, bottom_mergin=10,right_mergin=5,left_mergin=5):
         left_eye_indices = [362, 385, 387, 263, 373, 380, 374, 390, 249, 466, 388]
         right_eye_indices = [33, 160, 158, 133, 153, 144, 163, 7, 173, 246, 161]
 
@@ -239,12 +239,13 @@ class facial_landmark:
 if __name__ == '__main__':
     face_ex = facial_landmark()
 
-    base_input_folder = r"../DATA_SETS/C_DataSet/columbia_gaze_data_set/Columbia Gaze Data Set"
+    # base_input_folder = r"../DATA_SETS/C_DataSet/columbia_gaze_data_set/Columbia Gaze Data Set"
+    base_input_folder = r"../DATA_SETS/CelebAGaze"
 
-    base_output_folder = "./preprocessing_dataset_NEW"
+    base_output_folder = "./preprocessing_dataset_CelebA"
 
-    for i in range(29, 30):
-        folder_number = f"{i:04d}"
+    for i in range(0, 2):
+        folder_number = f"{i:01d}"
         input_folder = os.path.join(base_input_folder, folder_number)
         output_folder = os.path.join(base_output_folder, folder_number)
 

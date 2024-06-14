@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 
 
 import numpy as np
-file_path_l = './training_inputs_x/left_test_data.pkl'
-file_path_r = './training_inputs_x/right_test_data.pkl'
+file_path_l = './training_inputs_x/left_data.pkl'
+file_path_r = './training_inputs_x/right_data.pkl'
 
 
 def load_pickle_data(file_path):
@@ -117,135 +117,55 @@ class CheckpointSaver(tf.keras.callbacks.Callback):
         print(f'\nCheckpoint saved at epoch {epoch + 1}')
 
 # Train the GAN model with checkpoint saving
-epochs = 1000
+epochs = 1
 
-gan_model.fit(train_dataset, epochs=epochs, callbacks=[CheckpointSaver()])
+# gan_model.fit(train_dataset, epochs=epochs, callbacks=[CheckpointSaver()])
 
 
 #########################################################################################################################################
-# # import matplotlib.pyplot as plt
+# # # import matplotlib.pyplot as plt
 
-# def display_generated_image(generator, dataset):
-# Extract a random image and corresponding target from the dataset
+# # def display_generated_image(generator, dataset):
+# # Extract a random image and corresponding target from the dataset
 
-batch_size = 32
-test_data = load_pickle_data('./training_inputs_x/left_test_data.pkl')
-test_dataset = create_dataset(test_data, batch_size)
+# batch_size = 32
+# test_data = load_pickle_data('./training_inputs_x/left_test_data.pkl')
+# test_dataset = create_dataset(test_data, batch_size)
 
-for (img_t, gaze_target, landmarks_t), (img, gaze_real, landmarks) in test_dataset.take(1):
-    break
+# for (img_t, gaze_target, landmarks_t), (img, gaze_real, landmarks) in test_dataset.take(1):
+#     break
 
-img = tf.cast(img, tf.float32)
-img_t = tf.cast(img_t, tf.float32)
+# img = tf.cast(img, tf.float32)
+# img_t = tf.cast(img_t, tf.float32)
 
-gaze_target = tf.cast(gaze_target, tf.float32)
-gaze_real = tf.cast(gaze_real, tf.float32)
+# gaze_target = tf.cast(gaze_target, tf.float32)
+# gaze_real = tf.cast(gaze_real, tf.float32)
 
-
-# print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-# print(img.shape)
-# print(gaze_target.shape)
-# print(img)
-# print(gaze_target)
-
-# Generate the target image using the generator
-
-print(gaze_target)
-generated_image = generator(img, gaze_target, landmarks, training=False)
-
-# Convert images to the range [0, 1] for displaying
-img = (img + 1.0) / 2.0
-img_t = (img_t + 1.0) / 2.0
-generated_image = (generated_image + 1.0) / 2.0
-
-# Plot the original, target, and generated images
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-
-axes[0].imshow(img[0].numpy())
-axes[0].set_title("Original Image")
-axes[0].axis('off')
-
-axes[1].imshow(img_t[0].numpy())
-axes[1].set_title("Target Image")
-axes[1].axis('off')
-
-axes[2].imshow(generated_image[0].numpy())
-axes[2].set_title("Generated Image")
-axes[2].axis('off')
-
-plt.savefig('./result.png')
-plt.close(fig)
-
-##############################################################################################################
-
-
-# # Function to load and preprocess the image
-# def load_and_preprocess_image(image_path, target_size=(32, 64)):
-#     image = tf.io.read_file(image_path)
-#     image = tf.image.decode_jpeg(image, channels=3)
-#     image = tf.image.resize(image, target_size)
-
-#     image = tf.cast(image, tf.float32)
-#     image = (image / 127.5) - 1
-#     return image
-
-# # Function to unnormalize the image
-# def unnormalize_image(image):
-#     image = (image + 1) / 2 * 255
-#     return tf.cast(image, tf.uint8)
-
-# # Load the test image
-
-# test_image_path = './preprocessing_dataset_NEW/0029/right/0029_2m_0P_0V_-15H.jpg'
-# test_image = load_and_preprocess_image(test_image_path)
-
-# test_image = tf.cast(test_image, tf.float32)
-# # test_image = (test_image / 127.5) - 1.0
-
-# test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension
-
-# tar_img_ph = './preprocessing_dataset_NEW/0029/right/0029_2m_0P_0V_0H.jpg'
-# tar_img = load_and_preprocess_image(tar_img_ph)
-# tar_img = tf.cast(tar_img, tf.float32)
-
-
-
-# # Example target gaze direction
-# gaze_target = np.array([[0.0, 0.0]])  # Adjust as needed
-# gaze_target = tf.convert_to_tensor(gaze_target, dtype=tf.float32)
-
-# gaze_target = tf.expand_dims(gaze_target, axis=0)
-
-# # Define and compile your generator model as needed
-# # generator = Generator()
-# # Load your trained weights if not already done
-# # checkpoint.restore(checkpoint_manager.latest_checkpoint)
-
-# # Generate the output image
 
 # # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-# # print(test_image.shape)
+# # print(img.shape)
 # # print(gaze_target.shape)
-# # print(test_image)
+# # print(img)
 # # print(gaze_target)
 
-# # print(gaze_target)
-# generated_image = generator(test_image, gaze_target, training=False)
+# # Generate the target image using the generator
 
-# test_image = (test_image + 1.0) / 2.0
+# print(gaze_target)
+# generated_image = generator(img, gaze_target, landmarks, training=False)
+
+# # Convert images to the range [0, 1] for displaying
+# img = (img + 1.0) / 2.0
+# img_t = (img_t + 1.0) / 2.0
 # generated_image = (generated_image + 1.0) / 2.0
 
-# tar_img = (tar_img + 1.0) / 2.0
-# # generated_image = tf.squeeze(generated_image, axis=0).numpy()  # Remove batch dimension
-
-
+# # Plot the original, target, and generated images
 # fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    
-# axes[0].imshow(test_image[0].numpy())
+
+# axes[0].imshow(img[0].numpy())
 # axes[0].set_title("Original Image")
 # axes[0].axis('off')
 
-# axes[1].imshow(tar_img.numpy())
+# axes[1].imshow(img_t[0].numpy())
 # axes[1].set_title("Target Image")
 # axes[1].axis('off')
 
@@ -255,3 +175,98 @@ plt.close(fig)
 
 # plt.savefig('./result.png')
 # plt.close(fig)
+
+##############################################################################################################
+def read_landmarks_from_txt(file_path):
+    landmarks = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            x, y = map(int, line.strip().split(','))
+            landmarks.append((x, y))
+    return landmarks
+
+
+
+# Function to load and preprocess the image
+def load_and_preprocess_image(image_path, target_size=(32, 64)):
+    image = tf.io.read_file(image_path)
+    image = tf.image.decode_jpeg(image, channels=3)
+    image = tf.image.resize(image, target_size)
+
+    image = tf.cast(image, tf.float32)
+    image = (image / 127.5) - 1
+    return image
+
+# Function to unnormalize the image
+def unnormalize_image(image):
+    image = (image + 1) / 2 * 255
+    return tf.cast(image, tf.uint8)
+
+# Load the test image
+
+eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_CelebA/0/info/left/adam-driver-6.txt')
+# eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_NEW/0001/info/left/0001_2m_0P_0V_10H.txt')
+landmarks = tf.cast(eye_landmarks, tf.float32)
+
+landmarks = tf.expand_dims(landmarks, axis=0)
+
+test_image_path = './preprocessing_dataset_CelebA/0/left/adam-driver-6.jpg'
+# test_image_path = './preprocessing_dataset_NEW/0001/left/0001_2m_0P_0V_10H.jpg'
+test_image = load_and_preprocess_image(test_image_path)
+
+test_image = tf.cast(test_image, tf.float32)
+# test_image = (test_image / 127.5) - 1.0
+
+test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension
+
+# tar_img_ph = './preprocessing_dataset_NEW/0029/right/0029_2m_0P_0V_0H.jpg'
+# tar_img = load_and_preprocess_image(tar_img_ph)
+# tar_img = tf.cast(tar_img, tf.float32)
+
+
+# Example target gaze direction
+gaze_target = np.array([[0.0, 0.0]])  # Adjust as needed
+gaze_target = tf.convert_to_tensor(gaze_target, dtype=tf.float32)
+
+gaze_target = tf.expand_dims(gaze_target, axis=0)
+
+# Define and compile your generator model as needed
+# generator = Generator()
+# Load your trained weights if not already done
+# checkpoint.restore(checkpoint_manager.latest_checkpoint)
+
+# Generate the output image
+
+# print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+# print(test_image.shape)
+# print(gaze_target.shape)
+# print(test_image)
+# print(gaze_target)
+
+# print(gaze_target)
+generated_image = generator(test_image, gaze_target, landmarks, training=False)
+
+test_image = (test_image + 1.0) / 2.0
+generated_image = (generated_image + 1.0) / 2.0
+
+# tar_img = (tar_img + 1.0) / 2.0
+# generated_image = tf.squeeze(generated_image, axis=0).numpy()  # Remove batch dimension
+
+
+# fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+    
+axes[0].imshow(test_image[0].numpy())
+axes[0].set_title("Original Image")
+axes[0].axis('off')
+
+# axes[1].imshow(tar_img.numpy())
+# axes[1].set_title("Target Image")
+# axes[1].axis('off')
+
+axes[1].imshow(generated_image[0].numpy())
+axes[1].set_title("Generated Image")
+axes[1].axis('off')
+
+plt.savefig('./result_CA.png')
+plt.close(fig)

@@ -8,6 +8,30 @@ import tensorflow as tf
 
 import tensorflow_addons as tfa
 
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras.models import Model
+
+
+class VGG_model:
+    def __init__(self):
+        # Load the pre-trained VGG-16 model
+        vgg = VGG16(include_top=False, weights='imagenet')
+
+        # Choose the layers from which you want to extract features
+        layer_names = ['block1_conv2', 'block2_conv2', 'block3_conv3', 'block4_conv3', 'block5_conv3']
+        layers = [vgg.get_layer(name).output for name in layer_names]
+
+        # Create a model that outputs the selected layers
+        self.feature_extractor = Model(inputs=vgg.input, outputs=layers)
+        self.feature_extractor.trainable = False  # Freeze the VGG-16 layers
+
+    # Define the perceptual loss function
+    def perceptual_loss(self, y_true, y_pred):
+        y_true_features = self.feature_extractor(y_true)
+        y_pred_features = self.feature_extractor(y_pred)
+        loss = tf.add_n([tf.reduce_mean(tf.square(y_true_f - y_pred_f)) for y_true_f, y_pred_f in zip(y_true_features, y_pred_features)])
+        return loss
+
 
 class ConvBlock(layers.Layer):
     def __init__(self, filters, kernel_size=3, strides=1, padding='same'):
@@ -43,26 +67,13 @@ class UpConvBlock(layers.Layer):
     def __init__(self, filters, kernel_size=3, strides=2, padding='same'):
         super(UpConvBlock, self).__init__()
         self.conv1 = layers.Conv2DTranspose(filters, kernel_size, strides, padding)
-        self.bn1 = layers.BatchNormalization()
-        self.relu1 = layers.ReLU()
-        # self.conv2 = layers.Conv2DTranspose(filters, kernel_size, strides, padding)
-        # self.bn2 = layers.BatchNormalization()
-        # self.relu2 = layers.ReLU()
-        # self.conv3 = layers.Conv2DTranspose(filters, kernel_size, strides, padding)
-        # self.bn3 = layers.BatchNormalization()
-        # self.relu3 = layers.ReLU()
+        # self.bn1 = layers.BatchNormalization()
+        # self.relu1 = layers.ReLU()
         
     def call(self, inputs):
         x = self.conv1(inputs)
-        x = self.bn1(x)
-        x = self.relu1(x)
-        # x = self.conv2(x)
-        # x = self.bn2(x)
-        # x = self.relu2(x)
-        # x = self.conv3(x)
-        # x = self.bn3(x)
-        # # x = layers.add([x, inputs])
-        # x = self.relu3(x)
+        # x = self.bn1(x)
+        # x = self.relu1(x)
         return x
 
 class Generator(tf.keras.Model):
@@ -97,6 +108,7 @@ class Generator(tf.keras.Model):
         
     
     def call(self, input_image, target_angle, landmarks):
+
         # Expand target_angle to match the spatial dimensions of input_image
         batch_size = tf.shape(input_image)[0]
         height = tf.shape(input_image)[1]
@@ -157,35 +169,35 @@ class Generator(tf.keras.Model):
         x = self.final_conv(x)
 
 
-        # print('final_conv', x.shape)
+        # # print('final_conv', x.shape)
 
-        flow_x, brightness_x = tf.split(x, num_or_size_splits=[2, 1], axis=-1)
+        # flow_x, brightness_x = tf.split(x, num_or_size_splits=[2, 1], axis=-1)
 
-        # print('flow_x', flow_x.shape)
-        # print('brightness_x', brightness_x.shape)
+        # # print('flow_x', flow_x.shape)
+        # # print('brightness_x', brightness_x.shape)
 
-        # Flow field and brightness map
-        # flow_field = self.flow_conv(x)
-        # print("flow_field:", flow_field.shape)
-        flow_x = tf.tanh(flow_x)
+        # # Flow field and brightness map
+        # # flow_field = self.flow_conv(x)
+        # # print("flow_field:", flow_field.shape)
+        # flow_x = tf.tanh(flow_x)
 
-        brightness_map = tf.math.sigmoid(brightness_x, name=None)#self.brightness_conv(brightness_x)
-        # print("brightness_map:", brightness_map.shape)
+        # brightness_map = tf.math.sigmoid(brightness_x, name=None)#self.brightness_conv(brightness_x)
+        # # print("brightness_map:", brightness_map.shape)
 
 
-        # Warp the input image using the flow field
-        warped_image = self.warp(input_image, flow_x, landmarks)
+        # # Warp the input image using the flow field
+        # warped_image = self.warp(input_image, flow_x, landmarks)
         
-        # print("!!!!!!!!!!!!!!")
-        # print("warped_image:" , warped_image)
+        # # print("!!!!!!!!!!!!!!")
+        # # print("warped_image:" , warped_image)
 
-        # Adjust brightness using the brightness map
-        output_image = self.adjust_brightness(warped_image, brightness_map)
+        # # Adjust brightness using the brightness map
+        # output_image = self.adjust_brightness(warped_image, brightness_map)
 
-        # print("output_image:" , output_image)
+        # # print("output_image:" , output_image)
 
 
-        return output_image
+        return x
 
     def remove_duplicate_points(self, source_points, dest_points):
         """
@@ -279,7 +291,7 @@ class Generator(tf.keras.Model):
 
     #     return filtered_source_points, filtered_dest_points
 
-    def keep_top_and_last_difference_points(self, source_points, dest_points, top_k = 8, last_k = 8):
+    def keep_top_and_last_difference_points(self, source_points, dest_points, top_k = 8, last_k = 0):
         """
         Keep the top_k and last_k pairs of points based on the differences between dest_points and source_points.
         
@@ -362,7 +374,7 @@ class Generator(tf.keras.Model):
 
         # dest_points = (dest_points + 1.0) / 2.0
         dest_points_y = source_points_y + dest_points[..., 0] * (1.0)
-        dest_points_x = source_points_x + dest_points[..., 1] * (4.0)
+        dest_points_x = source_points_x + dest_points[..., 1] * (6.0)
         dest_points = tf.stack([dest_points_y, dest_points_x], axis=-1)
 
         # source_points, dest_points = self.remove_close_points(source_points,dest_points)
@@ -426,7 +438,7 @@ class GazeRedirectGAN(tf.keras.Model):
             recon_image = self.generator(output_image, gaze_real, landmarks_t)
             recon_loss = self.loss_fn(img, recon_image)
 
-            L_total = 0.99 * corr_loss + 0.01 * recon_loss
+            L_total = 0.8 * corr_loss + 0.2 * recon_loss
 
         # corr_gradients = tape.gradient(corr_loss, self.generator.trainable_variables)
         # recon_gradients = tape.gradient(recon_loss, self.generator.trainable_variables)
