@@ -4,10 +4,10 @@ import numpy as np
 import cv2
 import pickle
 
-dataset_dir = './preprocessing_dataset_NEW'
+dataset_dir = './preprocessing_dataset_COL'
 image_width = 64
 image_height = 32
-save_pickle_path = './training_inputs_x'
+save_pickle_path = './training_inputs'
 
 def process_image(img_path):
     # Load the image

@@ -2,9 +2,11 @@ framework.jpg
 result*.*
 *.jpg
 *.png
+*.h5
+
 
 /__pycache__/
 /preprocessing_dataset*/
 /training_checkpoints*/
 /training_inputs*/
-
+/VGG_HZ/

@@ -3,14 +3,14 @@ import os
 
 import tensorflow as tf
 
-from model import Generator, GazeRedirectGAN, VGG_model
+from model import Generator, GazeRedirectGAN, Discriminator
 
 import matplotlib.pyplot as plt
 
 
 import numpy as np
-file_path_l = './training_inputs_x/left_data.pkl'
-file_path_r = './training_inputs_x/right_data.pkl'
+file_path_l = './training_inputs_COL/left_data.pkl'
+file_path_r = './training_inputs_COL/right_data.pkl'
 
 
 def load_pickle_data(file_path):
@@ -71,19 +71,19 @@ train_dataset = create_dataset(data, batch_size)
 
 generator = Generator()
 
-# discriminator = Discriminator(params)
+discriminator = Discriminator()
 # vgg_model, _ = vgg_16(tf.keras.Input(shape=input_shape))
-vgg_model = VGG_model()
+
 
 # generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 # generator_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5)
 generator_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.9)
 
 
-gan_model = GazeRedirectGAN(generator)#, discriminator, vgg_model)
+gan_model = GazeRedirectGAN(generator,discriminator)#, discriminator, vgg_model)
 gan_model.compile(
     gen_optimizer=generator_optimizer,
-    # disc_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5),
+    disc_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5),
     # loss_fn = vgg_model.perceptual_loss
     loss_fn = tf.keras.losses.MeanSquaredError()
     # loss_fn=tf.keras.losses.BinaryCrossentropy(from_logits=True)#,
@@ -94,9 +94,9 @@ gan_model.compile(
 checkpoint_dir = './training_checkpoints'
 checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
 checkpoint = tf.train.Checkpoint(generator=gan_model.generator,
-                                #  discriminator=gan_model.discriminator,
-                                 gen_optimizer=gan_model.gen_optimizer#,
-                                #  disc_optimizer=gan_model.disc_optimizer
+                                 discriminator=gan_model.discriminator,
+                                 gen_optimizer=gan_model.gen_optimizer,
+                                 disc_optimizer=gan_model.disc_optimizer
                                  )
 # checkpoint = tf.train.Checkpoint(gan_model=gan_model, gen_optimizer=gan_model.gen_optimizer, disc_optimizer=gan_model.disc_optimizer)
 
@@ -204,14 +204,14 @@ def unnormalize_image(image):
 
 # Load the test image
 
-eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_CelebA/0/info/left/adam-driver-6.txt')
-# eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_NEW/0001/info/left/0001_2m_0P_0V_10H.txt')
+# eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_CelebA/0/info/left/ashley-graham-5.txt')
+eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_COL/0020/info/left/0020_2m_0P_0V_10H.txt')
 landmarks = tf.cast(eye_landmarks, tf.float32)
 
 landmarks = tf.expand_dims(landmarks, axis=0)
 
-test_image_path = './preprocessing_dataset_CelebA/0/left/adam-driver-6.jpg'
-# test_image_path = './preprocessing_dataset_NEW/0001/left/0001_2m_0P_0V_10H.jpg'
+# test_image_path = './preprocessing_dataset_CelebA/0/left/ashley-graham-5.jpg'
+test_image_path = './preprocessing_dataset_COL/0020/left/0020_2m_0P_0V_10H.jpg'
 test_image = load_and_preprocess_image(test_image_path)
 
 test_image = tf.cast(test_image, tf.float32)
@@ -230,6 +230,10 @@ gaze_target = tf.convert_to_tensor(gaze_target, dtype=tf.float32)
 
 gaze_target = tf.expand_dims(gaze_target, axis=0)
 
+pose = 0.0#np.array([[0.0]])
+pose = tf.convert_to_tensor(pose, dtype=tf.float32)
+pose = tf.expand_dims(pose, axis=0)
+
 # Define and compile your generator model as needed
 # generator = Generator()
 # Load your trained weights if not already done
@@ -244,7 +248,7 @@ gaze_target = tf.expand_dims(gaze_target, axis=0)
 # print(gaze_target)
 
 # print(gaze_target)
-generated_image = generator(test_image, gaze_target, landmarks, training=False)
+generated_image = generator(test_image, pose, gaze_target, landmarks, training=False)
 
 test_image = (test_image + 1.0) / 2.0
 generated_image = (generated_image + 1.0) / 2.0
