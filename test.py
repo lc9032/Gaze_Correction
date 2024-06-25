@@ -204,14 +204,14 @@ def unnormalize_image(image):
 
 # Load the test image
 
-# eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_CelebA/0/info/left/ashley-graham-5.txt')
-eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_COL/0020/info/left/0020_2m_0P_0V_10H.txt')
+# eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_CelebA/0/info/left/anna-jackson-2.txt')
+eye_landmarks = read_landmarks_from_txt('./preprocessing_dataset_COL/0024/info/left/0024_2m_0P_0V_-15H.txt')
 landmarks = tf.cast(eye_landmarks, tf.float32)
 
 landmarks = tf.expand_dims(landmarks, axis=0)
 
-# test_image_path = './preprocessing_dataset_CelebA/0/left/ashley-graham-5.jpg'
-test_image_path = './preprocessing_dataset_COL/0020/left/0020_2m_0P_0V_10H.jpg'
+# test_image_path = './preprocessing_dataset_CelebA/0/left/anna-jackson-2.jpg'
+test_image_path = './preprocessing_dataset_COL/0024/left/0024_2m_0P_0V_-15H.jpg'
 test_image = load_and_preprocess_image(test_image_path)
 
 test_image = tf.cast(test_image, tf.float32)
@@ -252,6 +252,7 @@ generated_image = generator(test_image, pose, gaze_target, landmarks, training=F
 
 test_image = (test_image + 1.0) / 2.0
 generated_image = (generated_image + 1.0) / 2.0
+print(generated_image) 
 
 # tar_img = (tar_img + 1.0) / 2.0
 # generated_image = tf.squeeze(generated_image, axis=0).numpy()  # Remove batch dimension

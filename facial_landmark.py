@@ -7,38 +7,50 @@ import mediapipe as mp
 
 class facial_landmark:
     def __init__(self):
-        pass
+        self.top_margin = 10
+        self.bottom_mergin = 10
+        self.right_mergin = 5
+        self.left_mergin = 5
 
-    def extract_eye_regions(self, frame, landmarks, top_margin=10, bottom_mergin=10,right_mergin=5,left_mergin=5):
-        left_eye_indices = [362, 385, 387, 263, 373, 380, 374, 390, 249, 466, 388]
-        right_eye_indices = [33, 160, 158, 133, 153, 144, 163, 7, 173, 246, 161]
+        self.left_eye_indices = [362, 385, 387, 263, 373, 380, 374, 390, 249, 466, 388]
+        self.right_eye_indices = [33, 160, 158, 133, 153, 144, 163, 7, 173, 246, 161]
 
+    def extract_eye_points(self, frame, landmarks):
         left_eye_points = [(int(landmarks.landmark[idx].x * frame.shape[1]), 
-                            int(landmarks.landmark[idx].y * frame.shape[0])) for idx in left_eye_indices]
+                            int(landmarks.landmark[idx].y * frame.shape[0])) for idx in self.left_eye_indices]
         right_eye_points = [(int(landmarks.landmark[idx].x * frame.shape[1]), 
-                            int(landmarks.landmark[idx].y * frame.shape[0])) for idx in right_eye_indices]
+                            int(landmarks.landmark[idx].y * frame.shape[0])) for idx in self.right_eye_indices]
+        
+        return left_eye_points, right_eye_points
 
+
+    def extract_eye_bboxs(self, frame, left_eye_points, right_eye_points):
         # Extract the bounding boxes around the eyes
         left_eye_bbox = cv2.boundingRect(np.array(left_eye_points))
         right_eye_bbox = cv2.boundingRect(np.array(right_eye_points))
         
         # Add margin to the bounding boxes
-        left_eye_bbox = (max(left_eye_bbox[0] - left_mergin, 0),
-                         max(left_eye_bbox[1] - top_margin, 0),
-                         min(left_eye_bbox[2] + 2 * right_mergin, frame.shape[1] - left_eye_bbox[0] + right_mergin),
-                         min(left_eye_bbox[3] + 2 * bottom_mergin, frame.shape[0] - left_eye_bbox[1] + bottom_mergin))
+        left_eye_bbox = (max(left_eye_bbox[0] - self.left_mergin, 0),
+                         max(left_eye_bbox[1] - self.top_margin, 0),
+                         min(left_eye_bbox[2] + 2 * self.right_mergin, frame.shape[1] - left_eye_bbox[0] + self.right_mergin),
+                         min(left_eye_bbox[3] + 2 * self.bottom_mergin, frame.shape[0] - left_eye_bbox[1] + self.bottom_mergin))
         
-        right_eye_bbox = (max(right_eye_bbox[0] - left_mergin, 0),
-                          max(right_eye_bbox[1] - top_margin, 0),
-                          min(right_eye_bbox[2] + 2 * right_mergin, frame.shape[1] - right_eye_bbox[0] + right_mergin),
-                          min(right_eye_bbox[3] + 2 * bottom_mergin, frame.shape[0] - right_eye_bbox[1] + bottom_mergin))
-        
+        right_eye_bbox = (max(right_eye_bbox[0] - self.left_mergin, 0),
+                          max(right_eye_bbox[1] - self.top_margin, 0),
+                          min(right_eye_bbox[2] + 2 * self.right_mergin, frame.shape[1] - right_eye_bbox[0] + self.right_mergin),
+                          min(right_eye_bbox[3] + 2 * self.bottom_mergin, frame.shape[0] - right_eye_bbox[1] + self.bottom_mergin))
+
+        return left_eye_bbox, right_eye_bbox
+    
+    def extract_eye_regions(self, frame, landmarks):
+        left_eye_points, right_eye_points = self.extract_eye_points(frame, landmarks)
+        left_eye_bbox, right_eye_bbox = self.extract_eye_bboxs(frame, left_eye_points, right_eye_points)
+
         # Crop the eye regions with the added margin
         left_eye_region = frame[left_eye_bbox[1]:left_eye_bbox[1] + left_eye_bbox[3], 
                                 left_eye_bbox[0]:left_eye_bbox[0] + left_eye_bbox[2]]
         right_eye_region = frame[right_eye_bbox[1]:right_eye_bbox[1] + right_eye_bbox[3], 
                                  right_eye_bbox[0]:right_eye_bbox[0] + right_eye_bbox[2]]
-
 
         # Adjust the landmark points to match the new coordinate systems of the cropped regions
         left_eye_landmarks = [(pt[0] - left_eye_bbox[0], pt[1] - left_eye_bbox[1]) for pt in left_eye_points]
@@ -46,29 +58,14 @@ class facial_landmark:
 
         return left_eye_region, right_eye_region, left_eye_landmarks, right_eye_landmarks
     
-    def replace_eye_regions(self, frame, landmarks, new_eye_regions):
-        left_eye_indices = [362, 385, 387, 263, 373, 380, 374, 390, 249, 466, 388]
-        right_eye_indices = [33, 160, 158, 133, 153, 144, 163, 7, 173, 246, 161]
 
-        left_eye_points = [(int(landmarks.landmark[idx].x * frame.shape[1]), 
-                            int(landmarks.landmark[idx].y * frame.shape[0])) for idx in left_eye_indices]
-        right_eye_points = [(int(landmarks.landmark[idx].x * frame.shape[1]), 
-                            int(landmarks.landmark[idx].y * frame.shape[0])) for idx in right_eye_indices]
-        
-        # Extract the bounding boxes around the eyes
-        left_eye_bbox = cv2.boundingRect(np.array(left_eye_points))
-        right_eye_bbox = cv2.boundingRect(np.array(right_eye_points))
+    def replace_eye_regions(self, frame, landmarks, new_left_eye, new_right_eye):
+        left_eye_points, right_eye_points = self.extract_eye_points(frame, landmarks)
+        left_eye_bbox, right_eye_bbox = self.extract_eye_bboxs(frame, left_eye_points, right_eye_points)
 
         # Extract the bounding boxes' dimensions
         left_x, left_y, left_w, left_h = left_eye_bbox
         right_x, right_y, right_w, right_h = right_eye_bbox
-
-        # Calculate the split point (halfway through the combined eye regions)
-        split_point = new_eye_regions.shape[1] // 2
-
-        # Split the combined new eye regions into left and right eye regions
-        new_left_eye = new_eye_regions[:, split_point:]
-        new_right_eye = new_eye_regions[:, :split_point]
 
         # Resize the new eye regions to match the original bounding box sizes
         new_left_eye_resized = cv2.resize(new_left_eye, (left_w, left_h))

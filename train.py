@@ -62,10 +62,10 @@ def create_dataset(data, batch_size=32):
 
 batch_size = 64
 data_l = load_pickle_data(file_path_l)
-# data_r = load_pickle_data(file_path_r)
-# data = {**data_l, **data_r}
+data_r = load_pickle_data(file_path_r)
+data = {**data_l, **data_r}
 
-train_dataset = create_dataset(data_l, batch_size)
+train_dataset = create_dataset(data, batch_size)
 
 
 # Example usage
@@ -119,7 +119,7 @@ class CheckpointSaver(tf.keras.callbacks.Callback):
         print(f'\nCheckpoint saved at epoch {epoch + 1}')
 
 # Train the GAN model with checkpoint saving
-epochs = 100
+epochs = 1
 
 gan_model.fit(train_dataset, epochs=epochs, callbacks=[CheckpointSaver()])
 
