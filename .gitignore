@@ -10,3 +10,4 @@ result*.*
 /training_checkpoints*/
 /training_inputs*/
 /VGG_HZ/
+/CBG/
