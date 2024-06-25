@@ -53,16 +53,6 @@ class GazeCorrSys():
         checkpoint.restore(tf.train.latest_checkpoint(self.checkpoint_dir))
 
         return generator
-
-
-    # def process_frame(image, face_mesh):
-    #     # Convert the image color space from BGR to RGB
-    #     image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
-    #     image.flags.writeable = False
-    #     results = face_mesh.process(image)
-    #     image.flags.writeable = True
-    #     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    #     return image, results
     
     def extract_landmarks(self, face_landmarks, img_w, img_h):
         face_2d = []
