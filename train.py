@@ -1,23 +1,23 @@
-import pickle
+# import pickle
 import os
 
-import tensorflow as tf
+import tensorflow as tf # type: ignore
 
 from model import Generator, GazeRedirectGAN, Discriminator
 from processingDataset import ProcessingDataset
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt # type: ignore
 
-import cv2
+# import cv2
 
-import numpy as np
+# import numpy as np
 
 
 class Train():
     def __init__(self):
         self.file_path_l = './training_inputs_COL/left_data.pkl'
         self.file_path_r = './training_inputs_COL/right_data.pkl'
-        self.epochs = 1
+        self.epochs = 500
 
     def run(self):
         process_dataset = ProcessingDataset()

@@ -1,15 +1,14 @@
 import pickle
 import os
 
-import tensorflow as tf
+import tensorflow as tf # type: ignore
 
-from model import Generator, GazeRedirectGAN, Discriminator
+# from model import Generator, GazeRedirectGAN, Discriminator
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # type: ignore
 
-import cv2
-
-import numpy as np
+# import cv2
+# import numpy as np
 
 
 class ProcessingDataset:

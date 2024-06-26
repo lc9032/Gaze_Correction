@@ -1,7 +1,7 @@
 import os
 import glob
-import numpy as np
-import cv2
+import numpy as np # type: ignore
+import cv2 # type: ignore
 import pickle
 
 dataset_dir = './preprocessing_dataset_COL'

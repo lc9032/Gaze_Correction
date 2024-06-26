@@ -1,9 +1,9 @@
 
 import os
-import cv2
+import cv2 # type: ignore
 # import multiprocessing as mpg
-import numpy as np
-import mediapipe as mp
+import numpy as np # type: ignore
+import mediapipe as mp # type: ignore
 
 class facial_landmark:
     def __init__(self):

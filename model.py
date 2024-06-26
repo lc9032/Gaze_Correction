@@ -1,10 +1,10 @@
 
-import tensorflow as tf
-from tensorflow.keras import layers, models
-from tensorflow.keras.layers import Conv2D, ReLU, Conv2DTranspose, Activation, LayerNormalization, Add, Concatenate, BatchNormalization
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Lambda
-from tensorflow.keras.layers import Dense, Flatten, Input
-from tensorflow.keras.models import Model
+import tensorflow as tf # type: ignore
+from tensorflow.keras import layers, models # type: ignore
+from tensorflow.keras.layers import Conv2D, ReLU, Conv2DTranspose, Activation, LayerNormalization, Add, Concatenate, BatchNormalization # type: ignore
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Lambda # type: ignore
+from tensorflow.keras.layers import Dense, Flatten, Input # type: ignore
+from tensorflow.keras.models import Model # type: ignore
 
 from transformation import Transformation
 
