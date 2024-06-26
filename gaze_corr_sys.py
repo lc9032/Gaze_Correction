@@ -24,7 +24,6 @@ class GazeCorrSys():
         self.frame_queue = Queue(maxsize=10)
         self.output_queue = Queue(maxsize=10)
         self.lock = Lock()
-        self.generator = self.loadCheckPoint()
 
     # Function to preprocess the input image
     def preprocess_image(self, image):
@@ -113,32 +112,6 @@ class GazeCorrSys():
 
     # def gazeRedir(self):
     #     pass
-
-    def inference_thread(self):
-        while True:
-            if not self.frame_queue.empty():
-                frame, left_eye_region, right_eye_region, left_eye_landmarks, right_eye_landmarks, pose = self.frame_queue.get()
-                input_image_l = self.preprocess_image(left_eye_region)
-                input_image_r = self.preprocess_image(right_eye_region)
-                input_images = np.concatenate([input_image_l, input_image_r], axis=0)
-
-                gaze_target = np.array([[0.0, 0.0]])  # Adjust as needed
-                gaze_target = tf.convert_to_tensor(gaze_target, dtype=tf.float32)
-                gaze_target = tf.expand_dims(gaze_target, axis=0)
-                gaze_targets = tf.tile(gaze_target, [2, 1, 1])
-
-                landmarks_l = tf.cast(left_eye_landmarks, tf.float32) 
-                landmarks_r = tf.cast(right_eye_landmarks, tf.float32)
-                landmarks_batch = tf.concat([tf.expand_dims(landmarks_l, axis=0), tf.expand_dims(landmarks_r, axis=0)], axis=0)
-                # landmarks_l = tf.expand_dims(landmarks_l, axis=0)
-                # landmarks_r = tf.expand_dims(landmarks_r, axis=0)
-
-                predictions = self.generator(input_images, pose, gaze_targets, landmarks_batch, training=False)
-                
-                output_image_l = self.postprocess_image(predictions[0])
-                output_image_r = self.postprocess_image(predictions[1])
-
-                self.output_queue.put((frame, output_image_l, output_image_r))
     
     def run(self):
         # gen_model_ex = Generator()
