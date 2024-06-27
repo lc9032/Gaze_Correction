@@ -1,19 +1,13 @@
 
-# import os
-# import time
 import tensorflow as tf # type: ignore
 import numpy as np # type: ignore
 import cv2 # type: ignore
-# import matplotlib.pyplot as plt # type: ignore
-
-from model import Generator, Discriminator
-from facial_landmark import facial_landmark
-
-# import mediapipe as mp # type: ignore
-
 from threading import Thread, Lock
 import multiprocessing as mp
 from queue import Queue
+
+from model import Generator, Discriminator
+from facial_landmark import FacialLandmark
 
 image_width = 64
 image_height = 32
@@ -115,7 +109,7 @@ class GazeCorrSys():
     
     def run(self):
         # gen_model_ex = Generator()
-        facial_landmark_ex = facial_landmark()
+        facial_landmark_ex = FacialLandmark()
 
         generator = self.loadCheckPoint()
 

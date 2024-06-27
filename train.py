@@ -1,17 +1,8 @@
-# import pickle
 import os
-
 import tensorflow as tf # type: ignore
 
 from model import Generator, GazeRedirectGAN, Discriminator
 from processingDataset import ProcessingDataset
-
-# import matplotlib.pyplot as plt # type: ignore
-
-# import cv2
-
-# import numpy as np
-
 
 class Train():
     def __init__(self):
@@ -65,7 +56,7 @@ class Train():
 
         gan_model.fit(train_dataset, epochs=self.epochs, callbacks=[CheckpointSaver()])
 
-
-train = Train()
-train.run()
-print("Training Completed!!!")
+if __name__ == '__main__':
+    train = Train()
+    train.run()
+    print("Training Completed!!!")

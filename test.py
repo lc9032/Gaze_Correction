@@ -1,17 +1,11 @@
-# import pickle
+
 import os
-
 import tensorflow as tf # type: ignore
-
-from model import Generator, GazeRedirectGAN, Discriminator
-
 import matplotlib.pyplot as plt # type: ignore
-
 import numpy as np # type: ignore
 
+from model import Generator, Discriminator
 from processingDataset import ProcessingDataset
-
-
 
 class Test:
     def __init__(self):
@@ -20,8 +14,10 @@ class Test:
         # self.imgFilePath = './preprocessing_dataset_CelebA/0/left/anna-jackson-2.jpg'
         # self.imgInfoPath = './preprocessing_dataset_CelebA/0/info/left/anna-jackson-2.txt'
 
-        self.file_path_l = './training_inputs_COL/left_data.pkl'
-        self.file_path_r = './training_inputs_COL/right_data.pkl'
+        # self.file_path_l = './training_inputs_COL/left_data.pkl'
+        # self.file_path_r = './training_inputs_COL/right_data.pkl'
+        self.file_path_l = './training_inputs_test/left_data.pkl'
+        self.file_path_r = './training_inputs_test/right_data.pkl'
 
     def loadData(self):
         process_dataset = ProcessingDataset()
@@ -113,6 +109,6 @@ class Test:
 
         self.plotIMGs(test_image, generated_image)
 
-
-test = Test()
-test.run()
+if __name__ == '__main__':
+    test = Test()
+    test.run()

@@ -1,16 +1,20 @@
 
 import os
 import cv2 # type: ignore
-# import multiprocessing as mpg
 import numpy as np # type: ignore
 import mediapipe as mp # type: ignore
 
-class facial_landmark:
+class FacialLandmark:
     def __init__(self):
         self.top_margin = 10
         self.bottom_mergin = 10
         self.right_mergin = 5
         self.left_mergin = 5
+
+        # self.top_margin = 60
+        # self.bottom_mergin = 60
+        # self.right_mergin = 30
+        # self.left_mergin = 30
 
         self.left_eye_indices = [362, 385, 387, 263, 373, 380, 374, 390, 249, 466, 388]
         self.right_eye_indices = [33, 160, 158, 133, 153, 144, 163, 7, 173, 246, 161]
@@ -86,126 +90,50 @@ class facial_landmark:
 
         return results.multi_face_landmarks
     
-    def process_image(self, input_path, output_path):
-        image = cv2.imread(input_path)
-        if image is None:
-            print(f"Failed to read image {input_path}")
-            return
+#     def run(self):
+#         cap = cv2.VideoCapture(0)
+#         while cap.isOpened():
+#             ret, frame = cap.read()
+#             if not ret:
+#                 break
 
-        face_landmarks = self.face_landmark(image)
+#             # Convert the BGR image to RGB
+#             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        if face_landmarks:    
-            # eye_regions = self.extract_eye_regions_combined(image, face_landmarks[0])
-            eye_regions_left, eye_regions_right, left_eye_landmarks, right_eye_landmarks= self.extract_eye_regions(image, face_landmarks[0])
+#             face_landmarks = self.face_landmark(image)
 
-            # eye_regions = cv2.resize(eye_regions, (256, 256)) / 255.0
+#             if face_landmarks:    
+#                 left_eye_region, right_eye_region, _, _ = self.extract_eye_regions(frame, face_landmarks[0])
 
-            # Scale the landmark points to match the resized dimensions
-            left_eye_landmarks_resized = [(int(pt[0] * 64 / eye_regions_left.shape[1]), int(pt[1] * 32 / eye_regions_left.shape[0])) for pt in left_eye_landmarks]
-            right_eye_landmarks_resized = [(int(pt[0] * 64 / eye_regions_right.shape[1]), int(pt[1] * 32 / eye_regions_right.shape[0])) for pt in right_eye_landmarks]
-
-            eye_regions_left = cv2.resize(eye_regions_left, (64, 32)) / 255.0
-            eye_regions_right = cv2.resize(eye_regions_right, (64, 32)) / 255.0
-            
-            # Save the processed image
-            # output_file = os.path.join(output_path, os.path.basename(input_path))
-            # cv2.imwrite(output_file, eye_regions * 255.0)
-
-            output_path_left = os.path.join(output_path, 'left')
-            output_path_right = os.path.join(output_path, 'right')
-            os.makedirs(output_path_left, exist_ok=True)
-            os.makedirs(output_path_right, exist_ok=True)
-
-            output_file_left = os.path.join(output_path_left, os.path.basename(input_path))
-            output_file_right = os.path.join(output_path_right, os.path.basename(input_path))
-            cv2.imwrite(output_file_left, eye_regions_left * 255.0)
-            cv2.imwrite(output_file_right, eye_regions_right * 255.0)
-
-
-            dir_name = os.path.dirname(input_path)
-            file_name_without_extension = os.path.splitext(os.path.basename(input_path))[0]
-            new_file_name = file_name_without_extension + '.txt'
-
-            os.makedirs(output_path + '/info/left/', exist_ok=True)
-            os.makedirs(output_path + '/info/right/', exist_ok=True)
-
-            output_path_info = os.path.join(output_path, 'info/left', new_file_name)
-            # Save the landmarks to a text file
-            with open(output_path_info, "w") as f:
-                # f.write("Left Eye Landmarks:\n")
-                for point in left_eye_landmarks_resized:
-                    f.write(f"{point[0]},{point[1]}\n")
-
-            output_path_info = os.path.join(output_path, 'info/right', new_file_name)
-            with open(output_path_info, "w") as f:
-                # f.write("\nRight Eye Landmarks:\n")
-                for point in right_eye_landmarks_resized:
-                    f.write(f"{point[0]},{point[1]}\n")
-    
-    def process_images_in_folder(self, input_folder, output_folder):
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-
-        for filename in os.listdir(input_folder):
-            if filename.endswith(".jpg") or filename.endswith(".jpeg"):
-                input_path = os.path.join(input_folder, filename)
-                self.process_image(input_path, output_folder)
-    
-    def run(self):
-        cap = cv2.VideoCapture(0)
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break
-
-            # Convert the BGR image to RGB
-            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            face_landmarks = self.face_landmark(image)
-
-            if face_landmarks:    
-                left_eye_region, right_eye_region, _, _ = self.extract_eye_regions(frame, face_landmarks[0])
-
-                # Resize the eye regions to be the same height (optional, but often useful for concatenation)
-                if left_eye_region.shape[0] != right_eye_region.shape[0]:
-                    new_height = min(left_eye_region.shape[0], right_eye_region.shape[0])
-                    left_eye_region = cv2.resize(left_eye_region, (left_eye_region.shape[1], new_height))
-                    right_eye_region = cv2.resize(right_eye_region, (right_eye_region.shape[1], new_height))
-                combined_eye_region = np.hstack((right_eye_region, left_eye_region))
-                # eye_regions = self.extract_eye_regions_combined(frame, face_landmarks[0])
+#                 # Resize the eye regions to be the same height (optional, but often useful for concatenation)
+#                 if left_eye_region.shape[0] != right_eye_region.shape[0]:
+#                     new_height = min(left_eye_region.shape[0], right_eye_region.shape[0])
+#                     left_eye_region = cv2.resize(left_eye_region, (left_eye_region.shape[1], new_height))
+#                     right_eye_region = cv2.resize(right_eye_region, (right_eye_region.shape[1], new_height))
+#                 combined_eye_region = np.hstack((right_eye_region, left_eye_region))
+#                 # eye_regions = self.extract_eye_regions_combined(frame, face_landmarks[0])
                             
-                # Normalize eye regions (example)
-                # left_eye = cv2.resize(left_eye, (64, 64)) / 255.0
-                # right_eye = cv2.resize(right_eye, (64, 64)) / 255.0
-                # eye_regions = cv2.resize(eye_regions, (256, 128)) / 255.0
+#                 # Normalize eye regions (example)
+#                 # left_eye = cv2.resize(left_eye, (64, 64)) / 255.0
+#                 # right_eye = cv2.resize(right_eye, (64, 64)) / 255.0
+#                 # eye_regions = cv2.resize(eye_regions, (256, 128)) / 255.0
 
-                flipped = cv2.flip(frame, 1)
+#                 flipped = cv2.flip(frame, 1)
 
-                # Show the eye regions
-                # cv2.imshow('Left Eye', left_eye)
-                # cv2.imshow('Right Eye', right_eye)
-                cv2.imshow('Eyes', combined_eye_region)
-                cv2.imshow('DBG', flipped)
+#                 # Show the eye regions
+#                 # cv2.imshow('Left Eye', left_eye)
+#                 # cv2.imshow('Right Eye', right_eye)
+#                 cv2.imshow('Eyes', combined_eye_region)
+#                 cv2.imshow('DBG', flipped)
                     
-                if cv2.waitKey(5) & 0xFF == 27:
-                    break
+#                 if cv2.waitKey(5) & 0xFF == 27:
+#                     break
 
-        cap.release()
-        cv2.destroyAllWindows()
+#         cap.release()
+#         cv2.destroyAllWindows()
 
 
-if __name__ == '__main__':
-    face_ex = facial_landmark()
+# if __name__ == '__main__':
+#     face_ex = FacialLandmark()
 
-    # base_input_folder = r"../DATA_SETS/C_DataSet/columbia_gaze_data_set/Columbia Gaze Data Set"
-    # base_input_folder = r"../DATA_SETS/CelebAGaze"
-
-    # base_output_folder = "./preprocessing_dataset_CelebA"
-
-    # for i in range(0, 2):
-    #     folder_number = f"{i:01d}"
-    #     input_folder = os.path.join(base_input_folder, folder_number)
-    #     output_folder = os.path.join(base_output_folder, folder_number)
-
-    #     face_ex.process_images_in_folder(input_folder, output_folder)
-    face_ex.run()
+#     face_ex.run()
