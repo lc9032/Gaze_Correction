@@ -14,10 +14,10 @@ class ProcessingDataset:
         
         self.base_dataset_folder = r"../DATA_SETS/C_DataSet/columbia_gaze_data_set/Columbia Gaze Data Set"
 
-        self.preprocessing_dataset_dir = './preprocessing_dataset_COL_test'
+        self.preprocessing_dataset_dir = './preprocessing_dataset_COL'
 
-        self.save_pickle_path = './training_inputs_test'
-        self.ignore_list = ['0008', '0010', '0011', '0016', '0020', '0024', '0025', '0043', '0053']
+        self.save_pickle_path = './training_inputs_COL'
+        self.ignore_list = ['0008', '0010', '0011', '0016', '0024', '0025', '0043', '0053']
 
     def preprocess_image(self, input_path, output_path):
         facial_landmark = FacialLandmark()
@@ -41,6 +41,27 @@ class ProcessingDataset:
 
             eye_regions_left = cv2.resize(eye_regions_left, (64, 32)) / 255.0
             eye_regions_right = cv2.resize(eye_regions_right, (64, 32)) / 255.0
+
+            # #######################################################
+            # # Max_p = left_eye_landmarks_resized
+            # # min_p = left_eye_landmarks_resized
+            # # for p in left_eye_landmarks_resized:
+            # #     Max_p = 
+            # #     min_p = 
+            # # Ec_x = sum(p[0] for p in right_eye_landmarks_resized) / len(right_eye_landmarks_resized)
+            # # Ec_y = sum(p[1] for p in right_eye_landmarks_resized) / len(right_eye_landmarks_resized)
+
+            # # Ec_x = max(Ec[0] - (self.horizontal_margin/2) * L, 0)
+            # # Ec_y = max(Ec[1] - (self.vertical_margin/2) * L, 0)
+
+            # for _,right_eye_landmark_resized  in enumerate(right_eye_landmarks_resized):
+            #     pixel_x = right_eye_landmark_resized[0]
+            #     pixel_y = right_eye_landmark_resized[1]
+
+            #     cv2.circle(eye_regions_right, (int(pixel_x), int(pixel_y)), 1, (255, 255, 0), -1)
+
+            # # cv2.circle(eye_regions_right, (int(Ec_x), int(Ec_y)), 2, (0, 255, 0), -1)
+            # #######################################################
             
             # Save the processed image
             # output_file = os.path.join(output_path, os.path.basename(input_path))
@@ -87,7 +108,7 @@ class ProcessingDataset:
                 self.preprocess_image(input_path, output_folder)
     
     def preprocess_dataset(self):
-        for i in range(1, 2):
+        for i in range(1, 57):
             folder_number = f"{i:04d}"
             input_folder = os.path.join(self.base_dataset_folder, folder_number)
             output_folder = os.path.join(self.preprocessing_dataset_dir, folder_number)
@@ -178,12 +199,12 @@ class ProcessingDataset:
 
     def save_as_pickle(self):
         # Process left eye images
-        left_img_list = glob.glob(self.preprocessing_dataset_dir + '/0051/left/*.jpg')
+        left_img_list = glob.glob(self.preprocessing_dataset_dir + '/*/left/*.jpg')
         left_img_list.sort()
         self.create_pickle_data(left_img_list, self.save_pickle_path, 'left')
 
         # Process right eye images
-        right_img_list = glob.glob(self.preprocessing_dataset_dir + '/0051/right/*.jpg')
+        right_img_list = glob.glob(self.preprocessing_dataset_dir + '/*/right/*.jpg')
         right_img_list.sort()
         self.create_pickle_data(right_img_list, self.save_pickle_path, 'right')
     
@@ -240,5 +261,5 @@ class ProcessingDataset:
 
 if __name__ == '__main__':
     processing_dataset = ProcessingDataset()
-    processing_dataset.preprocess_dataset()
-    # processing_dataset.save_as_pickle()
+    # processing_dataset.preprocess_dataset()
+    processing_dataset.save_as_pickle()

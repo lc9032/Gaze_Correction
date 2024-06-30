@@ -90,7 +90,7 @@ class Transformation:
             return indices_grid
 
     def replace_zeros_with_original(self, transformed_image, original_image):
-        epsilon = 1e-6
+        epsilon = 1e-2
         mask = tf.reduce_all(tf.less_equal(tf.abs(transformed_image), epsilon), axis=-1, keepdims=True)
         mask = tf.cast(mask, tf.float32)
         return transformed_image * (1 - mask) + original_image * mask

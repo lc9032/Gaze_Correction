@@ -2,8 +2,6 @@
 import tensorflow as tf # type: ignore
 from tensorflow.keras import layers, models # type: ignore
 from tensorflow.keras.layers import  Concatenate, Flatten, Dense, Lambda# type: ignore
-# from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Conv2D, ReLU, Conv2DTranspose, Activation, LayerNormalization, Add, BatchNormalization# type: ignore
-# from tensorflow.keras.models import Model # type: ignore
 
 from transformation import Transformation
 
@@ -99,10 +97,10 @@ class Generator(tf.keras.Model):
         target_angle = tf.tile(target_angle, [1, height, width, 1])
 
         landmarks_reshaped_x, landmarks_reshaped_y = tf.split(landmarks, num_or_size_splits=2, axis=2)
-        landmarks_reshaped_x = tf.reshape(landmarks_reshaped_x, (batch_size, 1, 1, 11))
+        landmarks_reshaped_x = tf.reshape(landmarks_reshaped_x, (batch_size, 1, 1, 6))
         landmarks_reshaped_x = tf.tile(landmarks_reshaped_x, [1, height, width, 1])
 
-        landmarks_reshaped_y = tf.reshape(landmarks_reshaped_y, (batch_size, 1, 1, 11))
+        landmarks_reshaped_y = tf.reshape(landmarks_reshaped_y, (batch_size, 1, 1, 6))
         landmarks_reshaped_y = tf.tile(landmarks_reshaped_y, [1, height, width, 1])
         
         x = tf.concat([input_image, pose, target_angle, landmarks_reshaped_x, landmarks_reshaped_y], axis=-1)
@@ -245,7 +243,7 @@ class GazeRedirectGAN(tf.keras.Model):
             gan_fake, gaze_fake_p = self.discriminator(output_image, p_t, training=True)
 
             d_loss = 2.0*self.loss_fn(gaze_real, gaze_real_p) - 0.5*tf.reduce_mean(gan_real) + 0.5*tf.reduce_mean(gan_fake)
-            L_total = 400.0*L_total + 0.2*self.loss_fn(gaze_target, gaze_fake_p) - 0.8*tf.reduce_mean(gan_fake)
+            L_total = 8000.0*L_total + 1.4*self.loss_fn(gaze_target, gaze_fake_p) - 1.0*tf.reduce_mean(gan_fake)
 
         # Compute gradients for the total loss
         gradients = tape.gradient(L_total, self.generator.trainable_variables)

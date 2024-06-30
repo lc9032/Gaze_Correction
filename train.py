@@ -8,17 +8,18 @@ class Train():
     def __init__(self):
         self.file_path_l = './training_inputs_COL/left_data.pkl'
         self.file_path_r = './training_inputs_COL/right_data.pkl'
-        self.epochs = 500
+        self.batch_size = 256
+        self.epochs = 1000
 
     def run(self):
         process_dataset = ProcessingDataset()
 
-        batch_size = 64
+        
         data_l = process_dataset.load_pickle_data(self.file_path_l)
         data_r = process_dataset.load_pickle_data(self.file_path_r)
         data = {**data_l, **data_r}
 
-        train_dataset = process_dataset.create_dataset(data, batch_size)
+        train_dataset = process_dataset.create_dataset(data, self.batch_size)
 
         generator = Generator()
         discriminator = Discriminator()
@@ -26,13 +27,13 @@ class Train():
         gan_model = GazeRedirectGAN(generator, discriminator)
         gan_model.compile(
             gen_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.9),
-            disc_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5),
+            disc_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.9),
             loss_fn = tf.keras.losses.MeanSquaredError()
         )
 
         # Define checkpoint directory and checkpoint objects
         checkpoint_dir = './training_checkpoints'
-        checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
+        # checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
         checkpoint = tf.train.Checkpoint(generator=gan_model.generator,
                                         discriminator=gan_model.discriminator,
                                         gen_optimizer=gan_model.gen_optimizer,

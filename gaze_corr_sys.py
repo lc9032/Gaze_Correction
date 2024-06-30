@@ -9,15 +9,20 @@ from queue import Queue
 from model import Generator, Discriminator
 from facial_landmark import FacialLandmark
 
+CAMERA_VIDEO_SWITCH = 1
+
 image_width = 64
 image_height = 32
+
+input_video_path = './SampleFile.mp4'
+output_video_path = './output_video.mp4'
 
 class GazeCorrSys():
     def __init__(self):
         self.checkpoint_dir = './training_checkpoints'
-        self.frame_queue = Queue(maxsize=10)
-        self.output_queue = Queue(maxsize=10)
-        self.lock = Lock()
+        # self.frame_queue = Queue(maxsize=10)
+        # self.output_queue = Queue(maxsize=10)
+        # self.lock = Lock()
 
     # Function to preprocess the input image
     def preprocess_image(self, image):
@@ -53,7 +58,7 @@ class GazeCorrSys():
         # Restore the latest checkpoint
         checkpoint.restore(tf.train.latest_checkpoint(self.checkpoint_dir))
 
-        return generator
+        return generator, discriminator
     
     def extract_landmarks(self, face_landmarks, img_w, img_h):
         face_2d = []
@@ -86,7 +91,7 @@ class GazeCorrSys():
         angles, _, _, _, _, _ = cv2.RQDecomp3x3(rmat)
         
         x = angles[0] * 360
-        y = angles[1] * 360
+        y = angles[1] * 360 * 2
         z = angles[2] * 360
         
         return x, y, z, rotation_vec, translation_vec, cam_matrix, distortion_matrix
@@ -104,6 +109,30 @@ class GazeCorrSys():
         # cv2.putText(image, f'FPS: {int(fps)}', (20, 450), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 2)
         return image
 
+    def draw_gaze_predition(self, image, gaze_p):
+        # Extract x and y coordinates from gaze_p
+        gaze_x, gaze_y = gaze_p[0][0][0].numpy(), gaze_p[0][0][1].numpy()
+
+        # Convert gaze coordinates to pixel coordinates
+        frame_height, frame_width = image.shape[:2]
+        pixel_x = int((gaze_x*20) + frame_width / 2)
+        pixel_y = int(frame_height - ((gaze_y*20) + frame_height / 2))
+
+        # Draw a small circle at the gaze position
+        cv2.circle(image, (pixel_x, pixel_y), 10, (255, 255, 0), -1)
+
+        return image
+    
+    def draw_output_annotations(self, image, gaze_corr_flag):
+        # Extract x and y coordinates from gaze_p
+        if (gaze_corr_flag):
+            cv2.putText(image, "gaze correction ON", (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        else:
+            cv2.putText(image, "gaze correction OFF", (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+        return image
+
+
     # def gazeRedir(self):
     #     pass
     
@@ -111,22 +140,46 @@ class GazeCorrSys():
         # gen_model_ex = Generator()
         facial_landmark_ex = FacialLandmark()
 
-        generator = self.loadCheckPoint()
+        generator, discriminator = self.loadCheckPoint()
 
-        # Start the video capture
-        cap = cv2.VideoCapture(0)
+        
+        if CAMERA_VIDEO_SWITCH == 0:
+            # Start the video capture
+            cap = cv2.VideoCapture(0)
 
-        if not cap.isOpened():
-            print("Error: Could not open video capture.")
-            exit()
+            if not cap.isOpened():
+                print("Error: Could not open video capture.")
+                exit()
+        elif CAMERA_VIDEO_SWITCH == 1:
+            # Open the input video file
+            cap = cv2.VideoCapture(input_video_path)
+            if not cap.isOpened():
+                print("Error: Could not open input video file.")
+                return
+
+            # Get video properties
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            fps = int(cap.get(cv2.CAP_PROP_FPS))
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+            # Create VideoWriter object to save the output
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(output_video_path, fourcc, fps, (width*2, height))
+            frame_count = 0
 
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
 
+            frame = cv2.flip(frame, 1)
+
+            original_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             output_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             face_landmarks = facial_landmark_ex.face_landmark(frame)
+
+            gaze_corr_flag = False
 
             if face_landmarks:    
                 left_eye_region, right_eye_region, left_eye_landmarks, right_eye_landmarks = facial_landmark_ex.extract_eye_regions(frame, face_landmarks[0])
@@ -141,44 +194,60 @@ class GazeCorrSys():
                 face_2d, face_3d, _, _ = self.extract_landmarks(face_landmarks[0], img_w, img_h)
                 x, y, z, _, _, _, _ = self.calculate_head_pose(face_2d, face_3d, img_w, img_h)
 
-                # Generate the output image using the generator
-                pose_values = [y, y]  
-                pose = tf.constant(pose_values, shape=(2, 1), dtype=tf.float32)
+                if x < 20 and x > -20 and y < 30 and y > -30:
 
-                gaze_target = np.array([[0.0, 0.0]])  # Adjust as needed
-                gaze_target = tf.convert_to_tensor(gaze_target, dtype=tf.float32)
-                gaze_target = tf.expand_dims(gaze_target, axis=0)
-                gaze_targets = tf.tile(gaze_target, [2, 1, 1])
+                    gaze_corr_flag = True
 
-                landmarks_l = tf.cast(left_eye_landmarks, tf.float32) 
-                landmarks_r = tf.cast(right_eye_landmarks, tf.float32)
-                landmarks_batch = tf.concat([tf.expand_dims(landmarks_l, axis=0), tf.expand_dims(landmarks_r, axis=0)], axis=0)
+                    # Generate the output image using the generator
+                    pose_values = [y, y]  
+                    pose = tf.constant(pose_values, shape=(2, 1), dtype=tf.float32)
 
-                predictions = generator(input_images, pose, gaze_targets, landmarks_batch, training=False)
-                
-                # Postprocess the generated image
-                output_image_l = self.postprocess_image(predictions[0])
-                output_image_r = self.postprocess_image(predictions[1])
+                    gaze_target = np.array([[0.0, 0.0]])  # Adjust as needed
+                    gaze_target = tf.convert_to_tensor(gaze_target, dtype=tf.float32)
+                    gaze_target = tf.expand_dims(gaze_target, axis=0)
+                    gaze_targets = tf.tile(gaze_target, [2, 1, 1])
 
+                    landmarks_l = tf.cast(left_eye_landmarks, tf.float32) 
+                    landmarks_r = tf.cast(right_eye_landmarks, tf.float32)
+                    landmarks_batch = tf.concat([tf.expand_dims(landmarks_l, axis=0), tf.expand_dims(landmarks_r, axis=0)], axis=0)
 
-                facial_landmark_ex.replace_eye_regions(output_frame, face_landmarks[0], output_image_l, output_image_r)
-                self.draw_annotations(output_frame, x ,y ,z)
-                
+                    predictions = generator(input_images, pose, gaze_targets, landmarks_batch, training=False)
+                    
+                    # Postprocess the generated image
+                    output_image_l = self.postprocess_image(predictions[0])
+                    output_image_r = self.postprocess_image(predictions[1])
+
+                    facial_landmark_ex.replace_eye_regions(output_frame, face_landmarks[0], output_image_l, output_image_r)
+
+                    _, gaze_p = discriminator(predictions, pose, training=False)
+                    self.draw_gaze_predition(output_frame, gaze_p)
+
+            _, gaze_p = discriminator(input_images, pose, training=False)
+            self.draw_gaze_predition(original_frame, gaze_p)
+            self.draw_annotations(original_frame, x ,y ,z)
+            self.draw_output_annotations(output_frame, gaze_corr_flag)
+
             # Display the result
-            cv2.imshow('Input Image (Left) | Generated Image (Right)', cv2.cvtColor(output_frame, cv2.COLOR_RGB2BGR))
+            combined_frame = np.hstack((output_frame, original_frame))
+
+            if CAMERA_VIDEO_SWITCH == 0:
+                cv2.imshow('Input Image (Left) | Generated Image (Right)', cv2.cvtColor(combined_frame, cv2.COLOR_RGB2BGR))
             
-            # Break the loop on 'q' key press
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+                # Break the loop on 'q' key press
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            elif CAMERA_VIDEO_SWITCH == 1:       
+                combined_frame_bgr = cv2.cvtColor(combined_frame, cv2.COLOR_RGB2BGR)
+                out.write(combined_frame_bgr)
 
         # Release the video capture and close windows
         cap.release()
         cv2.destroyAllWindows()
 
-
 if __name__ == '__main__':
     gaze_corr_sys = GazeCorrSys()
     gaze_corr_sys.run()
+
 
 ##########################################################################################################################
 ##########################################################################################################################
@@ -411,3 +480,8 @@ if __name__ == '__main__':
 #     gaze_corr_sys.run()
 
 
+##########################################################################################################################
+##########################################################################################################################
+##########################################################################################################################
+##########################################################################################################################
+##########################################################################################################################

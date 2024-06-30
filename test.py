@@ -9,15 +9,15 @@ from processingDataset import ProcessingDataset
 
 class Test:
     def __init__(self):
-        self.imgFilePath = './preprocessing_dataset_COL/0024/left/0024_2m_0P_0V_-15H.jpg'
-        self.imgInfoPath = './preprocessing_dataset_COL/0024/info/left/0024_2m_0P_0V_-15H.txt'
+        self.imgFilePath = './preprocessing_dataset_COL/0045/left/0045_2m_0P_10V_-15H.jpg'
+        self.imgInfoPath = './preprocessing_dataset_COL/0045/info/left/0045_2m_0P_10V_-15H.txt'
         # self.imgFilePath = './preprocessing_dataset_CelebA/0/left/anna-jackson-2.jpg'
         # self.imgInfoPath = './preprocessing_dataset_CelebA/0/info/left/anna-jackson-2.txt'
 
         # self.file_path_l = './training_inputs_COL/left_data.pkl'
         # self.file_path_r = './training_inputs_COL/right_data.pkl'
-        self.file_path_l = './training_inputs_test/left_data.pkl'
-        self.file_path_r = './training_inputs_test/right_data.pkl'
+        self.file_path_l = './training_inputs_COL/left_data.pkl'
+        self.file_path_r = './training_inputs_COL/right_data.pkl'
 
     def loadData(self):
         process_dataset = ProcessingDataset()
@@ -88,7 +88,7 @@ class Test:
 
         # Load the checkpoint
         checkpoint_dir = './training_checkpoints'
-        checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
+        # checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
         checkpoint = tf.train.Checkpoint(generator=generator,
                                         discriminator=discriminator,
                                         gen_optimizer=generator_optimizer,
@@ -98,8 +98,8 @@ class Test:
         # Restore the latest checkpoint
         checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
 
-        # test_image, pose, gaze_target, landmarks = self.loadData()
-        test_image, pose, gaze_target, landmarks = self.loadDataFromPKL()
+        test_image, pose, gaze_target, landmarks = self.loadData()
+        # test_image, pose, gaze_target, landmarks = self.loadDataFromPKL()
         
         # Generate the output image
         generated_image = generator(test_image, pose, gaze_target, landmarks, training=False)
