@@ -7,9 +7,12 @@ import mediapipe as mp # type: ignore
 class FacialLandmark:
     def __init__(self):
         self.horizontal_margin = 1.6
-        self.vertical_margin = 0.8
+        self.vertical_margin = 1.2
         self.horizontal_offset = -5.0
         self.vertical_offset = -5.0
+
+        # self.left_eye_indices = [362, 384, 385, 386, 387, 381, 380, 374, 373, 390, 263]
+        # self.right_eye_indices = [33, 161, 160, 159, 158, 157, 144, 145, 153, 154, 133]
 
         self.left_eye_indices = [362, 385, 387, 380, 373, 263]
         self.right_eye_indices = [33, 160, 158, 144, 153, 133]

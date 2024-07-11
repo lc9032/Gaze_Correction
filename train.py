@@ -6,8 +6,9 @@ from processingDataset import ProcessingDataset
 
 class Train():
     def __init__(self):
-        self.file_path_l = './training_inputs_COL/left_data.pkl'
-        self.file_path_r = './training_inputs_COL/right_data.pkl'
+        self.file_path_l = './training_inputs_COL_48/left_data.pkl'
+        self.file_path_r = './training_inputs_COL_48/right_data.pkl'
+        self.checkpoint_dir = './training_checkpoints_48'
         self.batch_size = 256
         self.epochs = 1000
 
@@ -32,7 +33,7 @@ class Train():
         )
 
         # Define checkpoint directory and checkpoint objects
-        checkpoint_dir = './training_checkpoints'
+        
         # checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
         checkpoint = tf.train.Checkpoint(generator=gan_model.generator,
                                         discriminator=gan_model.discriminator,
@@ -40,7 +41,7 @@ class Train():
                                         disc_optimizer=gan_model.disc_optimizer
                                         )
 
-        checkpoint_manager = tf.train.CheckpointManager(checkpoint, checkpoint_dir, max_to_keep=10)
+        checkpoint_manager = tf.train.CheckpointManager(checkpoint, self.checkpoint_dir, max_to_keep=10)
 
         # Restore the latest checkpoint if it exists
         if checkpoint_manager.latest_checkpoint:

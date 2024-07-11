@@ -10,14 +10,15 @@ from facial_landmark import FacialLandmark
 class ProcessingDataset:
     def __init__(self):
         self.image_width = 64
-        self.image_height = 32
+        self.image_height = 48
         
         self.base_dataset_folder = r"../DATA_SETS/C_DataSet/columbia_gaze_data_set/Columbia Gaze Data Set"
 
-        self.preprocessing_dataset_dir = './preprocessing_dataset_COL'
+        self.preprocessing_dataset_dir = './preprocessing_dataset_COL_48'
 
-        self.save_pickle_path = './training_inputs_COL'
-        self.ignore_list = ['0008', '0010', '0011', '0016', '0024', '0025', '0043', '0053']
+        self.save_pickle_path = './training_inputs_COL_48'
+        # self.ignore_list = ['0008', '0010', '0011', '0016', '0024', '0025', '0043', '0053']
+        self.ignore_list = []
 
     def preprocess_image(self, input_path, output_path):
         facial_landmark = FacialLandmark()
@@ -36,33 +37,12 @@ class ProcessingDataset:
             # eye_regions = cv2.resize(eye_regions, (256, 256)) / 255.0
 
             # Scale the landmark points to match the resized dimensions
-            left_eye_landmarks_resized = [(int(pt[0] * 64 / eye_regions_left.shape[1]), int(pt[1] * 32 / eye_regions_left.shape[0])) for pt in left_eye_landmarks]
-            right_eye_landmarks_resized = [(int(pt[0] * 64 / eye_regions_right.shape[1]), int(pt[1] * 32 / eye_regions_right.shape[0])) for pt in right_eye_landmarks]
+            left_eye_landmarks_resized = [(int(pt[0] * self.image_width / eye_regions_left.shape[1]), int(pt[1] * self.image_height / eye_regions_left.shape[0])) for pt in left_eye_landmarks]
+            right_eye_landmarks_resized = [(int(pt[0] * self.image_width / eye_regions_right.shape[1]), int(pt[1] * self.image_height / eye_regions_right.shape[0])) for pt in right_eye_landmarks]
 
-            eye_regions_left = cv2.resize(eye_regions_left, (64, 32)) / 255.0
-            eye_regions_right = cv2.resize(eye_regions_right, (64, 32)) / 255.0
-
-            # #######################################################
-            # # Max_p = left_eye_landmarks_resized
-            # # min_p = left_eye_landmarks_resized
-            # # for p in left_eye_landmarks_resized:
-            # #     Max_p = 
-            # #     min_p = 
-            # # Ec_x = sum(p[0] for p in right_eye_landmarks_resized) / len(right_eye_landmarks_resized)
-            # # Ec_y = sum(p[1] for p in right_eye_landmarks_resized) / len(right_eye_landmarks_resized)
-
-            # # Ec_x = max(Ec[0] - (self.horizontal_margin/2) * L, 0)
-            # # Ec_y = max(Ec[1] - (self.vertical_margin/2) * L, 0)
-
-            # for _,right_eye_landmark_resized  in enumerate(right_eye_landmarks_resized):
-            #     pixel_x = right_eye_landmark_resized[0]
-            #     pixel_y = right_eye_landmark_resized[1]
-
-            #     cv2.circle(eye_regions_right, (int(pixel_x), int(pixel_y)), 1, (255, 255, 0), -1)
-
-            # # cv2.circle(eye_regions_right, (int(Ec_x), int(Ec_y)), 2, (0, 255, 0), -1)
-            # #######################################################
-            
+            eye_regions_left = cv2.resize(eye_regions_left, (self.image_width, self.image_height)) / 255.0
+            eye_regions_right = cv2.resize(eye_regions_right, (self.image_width, self.image_height)) / 255.0
+ 
             # Save the processed image
             # output_file = os.path.join(output_path, os.path.basename(input_path))
             # cv2.imwrite(output_file, eye_regions * 255.0)

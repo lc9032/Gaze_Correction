@@ -4,11 +4,13 @@ result*.*
 *.png
 *.h5
 *.mp4
-
+*.aac
+*.sh
 
 /__pycache__/
 /preprocessing_dataset*/
 /training_checkpoints*/
 /training_inputs*/
+/TRCKP*/
 /VGG_HZ/
 /CBG/

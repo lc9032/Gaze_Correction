@@ -7,17 +7,21 @@ import numpy as np # type: ignore
 from model import Generator, Discriminator
 from processingDataset import ProcessingDataset
 
+LOAD_DATA_DIR_PKL_SWITCH = 1
+
 class Test:
     def __init__(self):
-        self.imgFilePath = './preprocessing_dataset_COL/0045/left/0045_2m_0P_10V_-15H.jpg'
-        self.imgInfoPath = './preprocessing_dataset_COL/0045/info/left/0045_2m_0P_10V_-15H.txt'
+        self.imgFilePath = './preprocessing_dataset_COL_48/0045/left/0045_2m_0P_10V_-15H.jpg'
+        self.imgInfoPath = './preprocessing_dataset_COL_48/0045/info/left/0045_2m_0P_10V_-15H.txt'
         # self.imgFilePath = './preprocessing_dataset_CelebA/0/left/anna-jackson-2.jpg'
         # self.imgInfoPath = './preprocessing_dataset_CelebA/0/info/left/anna-jackson-2.txt'
 
         # self.file_path_l = './training_inputs_COL/left_data.pkl'
         # self.file_path_r = './training_inputs_COL/right_data.pkl'
-        self.file_path_l = './training_inputs_COL/left_data.pkl'
-        self.file_path_r = './training_inputs_COL/right_data.pkl'
+        self.file_path_l = './training_inputs_COL_48/left_data.pkl'
+        self.file_path_r = './training_inputs_COL_48/right_data.pkl'
+
+        self.checkpoint_dir = './training_checkpoints_48'
 
     def loadData(self):
         process_dataset = ProcessingDataset()
@@ -46,7 +50,7 @@ class Test:
     def loadDataFromPKL(self):
         process_dataset = ProcessingDataset()
 
-        batch_size = 64
+        batch_size = 1
 
         test_data = process_dataset.load_pickle_data(self.file_path_l)
         test_dataset = process_dataset.create_dataset(test_data, batch_size)
@@ -87,7 +91,6 @@ class Test:
         discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
         # Load the checkpoint
-        checkpoint_dir = './training_checkpoints'
         # checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
         checkpoint = tf.train.Checkpoint(generator=generator,
                                         discriminator=discriminator,
@@ -96,10 +99,12 @@ class Test:
                                         )
 
         # Restore the latest checkpoint
-        checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+        checkpoint.restore(tf.train.latest_checkpoint(self.checkpoint_dir))
 
-        test_image, pose, gaze_target, landmarks = self.loadData()
-        # test_image, pose, gaze_target, landmarks = self.loadDataFromPKL()
+        if LOAD_DATA_DIR_PKL_SWITCH == 0:
+            test_image, pose, gaze_target, landmarks = self.loadData()
+        else:
+            test_image, pose, gaze_target, landmarks = self.loadDataFromPKL()
         
         # Generate the output image
         generated_image = generator(test_image, pose, gaze_target, landmarks, training=False)

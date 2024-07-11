@@ -97,9 +97,11 @@ class Generator(tf.keras.Model):
         target_angle = tf.tile(target_angle, [1, height, width, 1])
 
         landmarks_reshaped_x, landmarks_reshaped_y = tf.split(landmarks, num_or_size_splits=2, axis=2)
+        # landmarks_reshaped_x = tf.reshape(landmarks_reshaped_x, (batch_size, 1, 1, 11))
         landmarks_reshaped_x = tf.reshape(landmarks_reshaped_x, (batch_size, 1, 1, 6))
         landmarks_reshaped_x = tf.tile(landmarks_reshaped_x, [1, height, width, 1])
 
+        # landmarks_reshaped_y = tf.reshape(landmarks_reshaped_y, (batch_size, 1, 1, 11))
         landmarks_reshaped_y = tf.reshape(landmarks_reshaped_y, (batch_size, 1, 1, 6))
         landmarks_reshaped_y = tf.tile(landmarks_reshaped_y, [1, height, width, 1])
         
@@ -158,6 +160,7 @@ class Generator(tf.keras.Model):
     def adjust_brightness(self, warped_image, brightness_map):
         brightness_map = tf.image.resize(brightness_map, (tf.shape(warped_image)[1], tf.shape(warped_image)[2]))
         adjusted_image = warped_image * (brightness_map*1.0+0.0)
+        # adjusted_image = adjusted_image * 1.1
         return adjusted_image
 
 class Discriminator(tf.keras.Model):
@@ -205,7 +208,7 @@ class Discriminator(tf.keras.Model):
 
         x_reg, x_gan = tf.split(x, num_or_size_splits=[2, 1], axis=-1)
 
-        x_reg = Lambda(lambda x: x * 20.0)(x_reg)  # Scaling to range [-20, 20]
+        # x_reg = Lambda(lambda x: x * 20.0)(x_reg)  # Scaling to range [-20, 20]
 
         x_reg = tf.reshape(x_reg, (batch_size, 1, 2))
 
@@ -242,8 +245,8 @@ class GazeRedirectGAN(tf.keras.Model):
             gan_real, gaze_real_p = self.discriminator(img, p, training=True)
             gan_fake, gaze_fake_p = self.discriminator(output_image, p_t, training=True)
 
-            d_loss = 2.0*self.loss_fn(gaze_real, gaze_real_p) - 0.5*tf.reduce_mean(gan_real) + 0.5*tf.reduce_mean(gan_fake)
-            L_total = 8000.0*L_total + 1.4*self.loss_fn(gaze_target, gaze_fake_p) - 1.0*tf.reduce_mean(gan_fake)
+            d_loss = 40.0*self.loss_fn(gaze_real, gaze_real_p) - 1.0*tf.reduce_mean(gan_real) + 1.0*tf.reduce_mean(gan_fake)
+            L_total = 200.0*L_total + 16.0*self.loss_fn(gaze_target, gaze_fake_p) + 10.2*(-1 - tf.reduce_mean(gan_fake))
 
         # Compute gradients for the total loss
         gradients = tape.gradient(L_total, self.generator.trainable_variables)
@@ -255,7 +258,7 @@ class GazeRedirectGAN(tf.keras.Model):
 
         self.disc_optimizer.apply_gradients(zip(disc_gradients, self.discriminator.trainable_variables))
 
-        return {"lc": lc, "lr": lr, "lt": L_total, "gr": tf.reduce_mean(gan_real), "gf": tf.reduce_mean(gan_fake)}
+        return {"lcr": lc+lr, "ggr": self.loss_fn(gaze_target, gaze_fake_p), "glf": 10.2*(-1 - tf.reduce_mean(gan_fake)), "lt": L_total, "dl": d_loss}
 
 
     def call(self, inputs, training=False):
