@@ -5,7 +5,7 @@ import glob
 import numpy as np # type: ignore
 import cv2 # type: ignore
 
-from facial_landmark import FacialLandmark
+from Model.facial_landmark import FacialLandmark
 
 class ProcessingDataset:
     def __init__(self):
@@ -14,9 +14,9 @@ class ProcessingDataset:
         
         self.base_dataset_folder = r"../DATA_SETS/C_DataSet/columbia_gaze_data_set/Columbia Gaze Data Set"
 
-        self.preprocessing_dataset_dir = './preprocessing_dataset_COL_48'
+        self.preprocessing_dataset_dir = './DataSets/preprocessing_dataset_COL_0711'
 
-        self.save_pickle_path = './training_inputs_COL_48'
+        self.save_pickle_path = './DataSets/training_inputs_COL_0712'
         # self.ignore_list = ['0008', '0010', '0011', '0016', '0024', '0025', '0043', '0053']
         self.ignore_list = []
 

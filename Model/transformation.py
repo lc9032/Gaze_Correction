@@ -120,7 +120,6 @@ class Transformation:
 
             transformed_image = self.replace_zeros_with_original(transformed_image, img)
 
-            
             return transformed_image
 
 

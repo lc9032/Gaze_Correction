@@ -3,7 +3,7 @@ import tensorflow as tf # type: ignore
 from tensorflow.keras import layers, models # type: ignore
 from tensorflow.keras.layers import  Concatenate, Flatten, Dense, Lambda# type: ignore
 
-from transformation import Transformation
+from Model.transformation import Transformation
 
 
 class ConvBlock(layers.Layer):
@@ -75,7 +75,7 @@ class Generator(tf.keras.Model):
         
         # self.final_conv = tf.keras.layers.Conv2D(3, (3, 3), padding='same', activation='tanh')
         # self.final_conv = tf.keras.layers.Conv2D(3, (3, 3), padding='same', activation=None)
-        self.final_conv = tf.keras.layers.Conv2D(3, (3, 3), padding='same', activation='linear')
+        self.final_conv = tf.keras.layers.Conv2D(4, (3, 3), padding='same', activation='linear')
 
         # # Final layers for producing flow field and brightness map
         # self.flow_conv = layers.Conv2D(2, kernel_size=4, strides=1, padding='same', activation=None)
@@ -142,26 +142,37 @@ class Generator(tf.keras.Model):
         x = self.final_conv(x)
         # print('final_conv', x.shape)
 
-        flow_x, brightness_x = tf.split(x, num_or_size_splits=[2, 1], axis=-1)
+        flow_x, brightness_x = tf.split(x, num_or_size_splits=[2, 2], axis=-1)
 
         # Flow field and brightness map
         # flow_field = self.flow_conv(x)
         flow_x = tf.tanh(flow_x)
-        brightness_map = tf.math.sigmoid(brightness_x, name=None)#self.brightness_conv(brightness_x)
+        # brightness_map = tf.math.sigmoid(brightness_x, name=None)#self.brightness_conv(brightness_x)
+        brightness_map = tf.nn.softmax(brightness_x)
 
         # Warp the input image using the flow field
         warped_image = self.trans.apply_transformation(flow_x, input_image, 3)
         
         # Adjust brightness using the brightness map
-        output_image = self.adjust_brightness(warped_image, brightness_map)
+        # output_image = self.adjust_brightness(warped_image, brightness_map)
+        output_image = self.apply_lcm(warped_image, brightness_map)
+        # output_image = warped_image
 
         return output_image
 
-    def adjust_brightness(self, warped_image, brightness_map):
-        brightness_map = tf.image.resize(brightness_map, (tf.shape(warped_image)[1], tf.shape(warped_image)[2]))
-        adjusted_image = warped_image * (brightness_map*1.0+0.0)
-        # adjusted_image = adjusted_image * 1.1
-        return adjusted_image
+    # def adjust_brightness(self, warped_image, brightness_map):
+    #     brightness_map = tf.image.resize(brightness_map, (tf.shape(warped_image)[1], tf.shape(warped_image)[2]))
+    #     adjusted_image = (warped_image) + (1 - warped_image)*(1-brightness_map)*0.75
+        
+    #     return adjusted_image
+    
+    def apply_lcm(self, batch_img, light_weight):
+        img_wgts, pal_wgts = tf.split(light_weight, [1,1], 3)
+        img_wgts = tf.tile(img_wgts, [1,1,1,3])
+        pal_wgts = tf.tile(pal_wgts, [1,1,1,3])
+        palette = tf.ones(tf.shape(batch_img), dtype = tf.float32)
+        ret = tf.add(tf.multiply(batch_img, img_wgts), tf.multiply(palette, pal_wgts))
+        return ret
 
 class Discriminator(tf.keras.Model):
     def __init__(self):
@@ -246,7 +257,7 @@ class GazeRedirectGAN(tf.keras.Model):
             gan_fake, gaze_fake_p = self.discriminator(output_image, p_t, training=True)
 
             d_loss = 40.0*self.loss_fn(gaze_real, gaze_real_p) - 1.0*tf.reduce_mean(gan_real) + 1.0*tf.reduce_mean(gan_fake)
-            L_total = 200.0*L_total + 16.0*self.loss_fn(gaze_target, gaze_fake_p) + 10.2*(-1 - tf.reduce_mean(gan_fake))
+            L_total = 200.0*L_total + 10.0*self.loss_fn(gaze_target, gaze_fake_p) + 80.0*(-1 - tf.reduce_mean(gan_fake))
 
         # Compute gradients for the total loss
         gradients = tape.gradient(L_total, self.generator.trainable_variables)
@@ -258,7 +269,7 @@ class GazeRedirectGAN(tf.keras.Model):
 
         self.disc_optimizer.apply_gradients(zip(disc_gradients, self.discriminator.trainable_variables))
 
-        return {"lcr": lc+lr, "ggr": self.loss_fn(gaze_target, gaze_fake_p), "glf": 10.2*(-1 - tf.reduce_mean(gan_fake)), "lt": L_total, "dl": d_loss}
+        return {"lcr": 0.8 * (lc) + 0.2 * (lr), "ggr": self.loss_fn(gaze_target, gaze_fake_p), "glf": 10.2*(-1 - tf.reduce_mean(gan_fake)), "lt": L_total, "dl": d_loss}
 
 
     def call(self, inputs, training=False):

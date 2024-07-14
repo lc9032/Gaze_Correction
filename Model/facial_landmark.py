@@ -8,8 +8,8 @@ class FacialLandmark:
     def __init__(self):
         self.horizontal_margin = 1.6
         self.vertical_margin = 1.2
-        self.horizontal_offset = -5.0
-        self.vertical_offset = -5.0
+        self.horizontal_offset = 0.0#-5.0
+        self.vertical_offset = 0.0#-5.0
 
         # self.left_eye_indices = [362, 384, 385, 386, 387, 381, 380, 374, 373, 390, 263]
         # self.right_eye_indices = [33, 161, 160, 159, 158, 157, 144, 145, 153, 154, 133]

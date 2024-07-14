@@ -8,9 +8,12 @@ result*.*
 *.sh
 
 /__pycache__/
+/Model/__pycache__/
 /preprocessing_dataset*/
 /training_checkpoints*/
+/TrainingCheckPoints*/
 /training_inputs*/
 /TRCKP*/
 /VGG_HZ/
 /CBG/
+/DataSets*/

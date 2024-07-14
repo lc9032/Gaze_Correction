@@ -4,24 +4,22 @@ import tensorflow as tf # type: ignore
 import matplotlib.pyplot as plt # type: ignore
 import numpy as np # type: ignore
 
-from model import Generator, Discriminator
+from Model.model import Generator, Discriminator
 from processingDataset import ProcessingDataset
 
 LOAD_DATA_DIR_PKL_SWITCH = 1
 
 class Test:
     def __init__(self):
-        self.imgFilePath = './preprocessing_dataset_COL_48/0045/left/0045_2m_0P_10V_-15H.jpg'
-        self.imgInfoPath = './preprocessing_dataset_COL_48/0045/info/left/0045_2m_0P_10V_-15H.txt'
+        self.imgFilePath = './DataSets/preprocessing_dataset_COL_0711/0045/left/0045_2m_0P_10V_-15H.jpg'
+        self.imgInfoPath = './DataSets/preprocessing_dataset_COL_0711/0045/info/left/0045_2m_0P_10V_-15H.txt'
         # self.imgFilePath = './preprocessing_dataset_CelebA/0/left/anna-jackson-2.jpg'
         # self.imgInfoPath = './preprocessing_dataset_CelebA/0/info/left/anna-jackson-2.txt'
 
-        # self.file_path_l = './training_inputs_COL/left_data.pkl'
-        # self.file_path_r = './training_inputs_COL/right_data.pkl'
-        self.file_path_l = './training_inputs_COL_48/left_data.pkl'
-        self.file_path_r = './training_inputs_COL_48/right_data.pkl'
+        self.file_path_l = './DataSets/training_inputs_COL_0712/left_data.pkl'
+        self.file_path_r = './DataSets/training_inputs_COL_0712/right_data.pkl'
 
-        self.checkpoint_dir = './training_checkpoints_48'
+        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0713'
 
     def loadData(self):
         process_dataset = ProcessingDataset()
