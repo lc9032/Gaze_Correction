@@ -14,7 +14,7 @@ import pyvirtualcam # type: ignore
 from Model.model import Generator, Discriminator
 from Model.facial_landmark import FacialLandmark
 
-CAMERA_VIDEO_SWITCH = 1
+CAMERA_VIDEO_SWITCH = 0
 
 # input_video_path = './testVideos/SampleFile_720.mp4'
 input_video_path = './testVideos/TEST11_720.mp4'
@@ -22,7 +22,8 @@ output_video_path = './output_video.mp4'
 
 class GazeCorrSys_server():
     def __init__(self):
-        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0713'
+        self.cap = None
+        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0715'
         self.generator, self.discriminator = self.loadCheckPoint()
         self.facial_landmark_ex = FacialLandmark()
         self.image_width = 64
@@ -186,81 +187,57 @@ class GazeCorrSys_server():
         return output_frame
     
     def run(self):
-        if CAMERA_VIDEO_SWITCH == 0:
-            # Start the video capture
-            cap = cv2.VideoCapture(0)
+        # Start the video capture
+        self.cap = cv2.VideoCapture(0)
 
-            if not cap.isOpened():
-                print("Error: Could not open video capture.")
-                exit()
+        if not self.cap.isOpened():
+            print("Error: Could not open video capture.")
+            exit()
 
-            width = 1280
-            height = 720
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        
-        elif CAMERA_VIDEO_SWITCH == 1:
+        width = 1280
+        height = 720
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        try:
+            # with pyvirtualcam.Camera(width=width, height=height, fps=30, device='/dev/video10') as cam:
+            with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
+                # frame_count = 0
+                while True:
+                    ret, frame = self.cap.read()
+                    if not ret:
+                        break
 
-            # Open the input video file
-            cap = cv2.VideoCapture(input_video_path)
-            if not cap.isOpened():
-                print("Error: Could not open input video file.")
-                return
+                    # frame_count += 1
+                    # if frame_count % 2 != 0:
+                    #     continue
 
-            # Get video properties
-            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            fps = int(cap.get(cv2.CAP_PROP_FPS))
+                    frame = cv2.flip(frame, 1)
 
-            # Create VideoWriter object to save the output
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(output_video_path, fourcc, fps, (width*2, height))
-
-        with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
-            # frame_count = 0
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-
-                # frame_count += 1
-                # if frame_count % 2 != 0:
-                #     continue
-
-                frame = cv2.flip(frame, 1)
-
-                processed_frame = self.process_frame(frame)
-
-                if CAMERA_VIDEO_SWITCH == 0:
-                    # processed_frame_rgb = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
+                    processed_frame = self.process_frame(frame)
 
                     cam.send(processed_frame)
                     cam.sleep_until_next_frame()
-                    # cv2.imshow('Input Image (Left) | Generated Image (Right)', cv2.cvtColor(processed_frame_rgb, cv2.COLOR_RGB2BGR))
+
+                    cv2.imshow('Input Image (Left) | Generated Image (Right)', cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR))
                 
-                    # # Break the loop on 'q' key press
-                    # if cv2.waitKey(1) & 0xFF == ord('q'):
-                    #     cap.release()
-                    #     cv2.destroyAllWindows()
-                    #     break
+                    # Break the loop on 'q' key press
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        self.cap.release()
+                        cv2.destroyAllWindows()
+                        break
 
-                elif CAMERA_VIDEO_SWITCH == 1:
-                    processed_frame_rgb = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
-                    out.write(processed_frame_rgb)
+        finally:
+            # Any cleanup code here
+            print("Cleaned up resources")
+            # Release the video capture
+            if self.cap:
+                self.cap.release()
 
-        # Release the video capture and close windows
-        if CAMERA_VIDEO_SWITCH == 1:
-            cap.release()
-            out.release()
+            # Close all OpenCV windows
             cv2.destroyAllWindows()
-            
-            # Extract audio from input video
-            audio_output_path = 'audio.aac'
-            ffmpeg.input(input_video_path).output(audio_output_path).run(overwrite_output=True)
 
-            input_video = ffmpeg.input(output_video_path)
-            audio = ffmpeg.input(audio_output_path)
-            ffmpeg.output(input_video, audio, "./owa.mp4", vcodec='copy', acodec='aac').run(overwrite_output=True)
+
+
     
     def run_mp4(self):
         # Open the input video file
@@ -338,4 +315,4 @@ class GazeCorrSys_server():
 
 if __name__ == '__main__':
     gaze_corr_sys = GazeCorrSys_server()
-    gaze_corr_sys.run_mp4()
+    gaze_corr_sys.run()

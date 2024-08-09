@@ -28,6 +28,11 @@ if __name__ == '__main__':
     # server_thread.join()
     # client_thread.join()
 
-    video_thread = Process(target=process_video)
-    video_thread.start()
-    video_thread.join()
+
+    gcsServer = GazeCorrSys_server()
+    gcsServer.run()
+
+
+    # video_thread = Process(target=process_video)
+    # video_thread.start()
+    # video_thread.join()

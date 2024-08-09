@@ -7,7 +7,7 @@ class Train():
     def __init__(self):
         self.file_path_l = './DataSets/training_inputs_COL_0712/left_data.pkl'
         self.file_path_r = './DataSets/training_inputs_COL_0712/right_data.pkl'
-        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0713'
+        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0715'
         self.batch_size = 256
         self.epochs = 1000
 
@@ -26,8 +26,8 @@ class Train():
 
         gan_model = GazeRedirectGAN(generator, discriminator)
         gan_model.compile(
-            gen_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0004, beta_1=0.9),
-            disc_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0004, beta_1=0.9),
+            gen_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.9),
+            disc_optimizer=tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.9),
             loss_fn = tf.keras.losses.MeanSquaredError()
         )
 

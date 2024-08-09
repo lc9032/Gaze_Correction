@@ -19,7 +19,7 @@ class Test:
         self.file_path_l = './DataSets/training_inputs_COL_0712/left_data.pkl'
         self.file_path_r = './DataSets/training_inputs_COL_0712/right_data.pkl'
 
-        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0713'
+        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0715'
 
     def loadData(self):
         process_dataset = ProcessingDataset()

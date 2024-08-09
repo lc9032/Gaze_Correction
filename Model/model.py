@@ -257,7 +257,7 @@ class GazeRedirectGAN(tf.keras.Model):
             gan_fake, gaze_fake_p = self.discriminator(output_image, p_t, training=True)
 
             d_loss = 40.0*self.loss_fn(gaze_real, gaze_real_p) - 1.0*tf.reduce_mean(gan_real) + 1.0*tf.reduce_mean(gan_fake)
-            L_total = 200.0*L_total + 10.0*self.loss_fn(gaze_target, gaze_fake_p) + 80.0*(-1 - tf.reduce_mean(gan_fake))
+            L_total = 800.0*L_total + 10.0*self.loss_fn(gaze_target, gaze_fake_p) + 80.0*(-1 - tf.reduce_mean(gan_fake))
 
         # Compute gradients for the total loss
         gradients = tape.gradient(L_total, self.generator.trainable_variables)
