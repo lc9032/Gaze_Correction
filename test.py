@@ -1,7 +1,7 @@
 
 import os
 import tensorflow as tf # type: ignore
-import matplotlib.pyplot as plt # type: ignore
+import matplotlib.pyplot as plt # type: ignoreabout:blank#blocked
 import numpy as np # type: ignore
 
 from Model.model import Generator, Discriminator
@@ -16,10 +16,10 @@ class Test:
         # self.imgFilePath = './preprocessing_dataset_CelebA/0/left/anna-jackson-2.jpg'
         # self.imgInfoPath = './preprocessing_dataset_CelebA/0/info/left/anna-jackson-2.txt'
 
-        self.file_path_l = './DataSets/training_inputs_COL_0712/left_data.pkl'
-        self.file_path_r = './DataSets/training_inputs_COL_0712/right_data.pkl'
+        self.file_path_l = './DataSets/training_inputs_U2/left_data.pkl'
+        self.file_path_r = './DataSets/training_inputs_U2/right_data.pkl'
 
-        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0715'
+        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0809'
 
     def loadData(self):
         process_dataset = ProcessingDataset()

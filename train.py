@@ -5,9 +5,9 @@ from processingDataset import ProcessingDataset
 
 class Train():
     def __init__(self):
-        self.file_path_l = './DataSets/training_inputs_COL_0712/left_data.pkl'
-        self.file_path_r = './DataSets/training_inputs_COL_0712/right_data.pkl'
-        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0715'
+        self.file_path_l = './DataSets/training_inputs_U2/left_data.pkl'
+        self.file_path_r = './DataSets/training_inputs_U2/right_data.pkl'
+        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0809_2'
         self.batch_size = 256
         self.epochs = 1000
 

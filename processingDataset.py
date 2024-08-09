@@ -14,9 +14,9 @@ class ProcessingDataset:
         
         self.base_dataset_folder = r"../DATA_SETS/C_DataSet/columbia_gaze_data_set/Columbia Gaze Data Set"
 
-        self.preprocessing_dataset_dir = './DataSets/preprocessing_dataset_COL_0711'
+        self.preprocessing_dataset_dir = './DataSets/preprocessing_dataset_U2'
 
-        self.save_pickle_path = './DataSets/training_inputs_COL_0712'
+        self.save_pickle_path = './DataSets/training_inputs_U2'
         # self.ignore_list = ['0008', '0010', '0011', '0016', '0024', '0025', '0043', '0053']
         self.ignore_list = []
 
