@@ -14,8 +14,12 @@ class FacialLandmark:
         # self.left_eye_indices = [362, 384, 385, 386, 387, 381, 380, 374, 373, 390, 263]
         # self.right_eye_indices = [33, 161, 160, 159, 158, 157, 144, 145, 153, 154, 133]
 
-        self.left_eye_indices = [362, 385, 387, 380, 373, 263]
-        self.right_eye_indices = [33, 160, 158, 144, 153, 133]
+        self.left_eye_indices = [362, 385, 387, 263, 373, 380]
+        self.right_eye_indices = [33, 160, 158, 133, 153, 144]
+        self.left_most = 0
+        self.right_most = 3
+
+
 
         # self.left_eye_indices = [362, 388]
         # self.right_eye_indices = [33, 133]
@@ -49,31 +53,17 @@ class FacialLandmark:
         self.left_mergin = int((face_width + face_height) * 0.012 * 2)
 
         return face_width, face_height
-
-    # def extract_eye_bboxs(self, frame, left_eye_points, right_eye_points):
-    #     # Extract the bounding boxes around the eyes
-    #     left_eye_bbox = cv2.boundingRect(np.array(left_eye_points))
-    #     right_eye_bbox = cv2.boundingRect(np.array(right_eye_points))
-        
-    #     # Add margin to the bounding boxes
-    #     left_eye_bbox = (max(left_eye_bbox[0] - self.left_mergin, 0),
-    #                      max(left_eye_bbox[1] - self.top_margin, 0),
-    #                      min(left_eye_bbox[2] + 2 * self.right_mergin, frame.shape[1] - left_eye_bbox[0] + self.right_mergin),
-    #                      min(left_eye_bbox[3] + 2 * self.bottom_mergin, frame.shape[0] - left_eye_bbox[1] + self.bottom_mergin))
-        
-    #     right_eye_bbox = (max(right_eye_bbox[0] - self.left_mergin, 0),
-    #                       max(right_eye_bbox[1] - self.top_margin, 0),
-    #                       min(right_eye_bbox[2] + 2 * self.right_mergin, frame.shape[1] - right_eye_bbox[0] + self.right_mergin),
-    #                       min(right_eye_bbox[3] + 2 * self.bottom_mergin, frame.shape[0] - right_eye_bbox[1] + self.bottom_mergin))
-
-    #     return left_eye_bbox, right_eye_bbox
     
     def extract_eye_bboxs(self, frame, left_eye_points, right_eye_points):
 
         def calculate_bbox(points):
             # Calculate the center point (Ec)
-            Ec_x = (points[0][0] + points[len(points)-1][0]) / 2
-            Ec_y = (points[0][1] + points[len(points)-1][1]) / 2
+            # Ec_x = (points[0][0] + points[len(points)-1][0]) / 2
+            # Ec_y = (points[0][1] + points[len(points)-1][1]) / 2
+
+            Ec_x = (points[self.left_most][0] + points[self.right_most ][0]) / 2
+            Ec_y = (points[self.left_most][1] + points[self.right_most ][1]) / 2
+
             Ec = (int(Ec_x), int(Ec_y))
 
             # Find the leftmost and rightmost points
@@ -81,7 +71,8 @@ class FacialLandmark:
             # right_point = max(points, key=lambda p: p[0])
             
             # Calculate L (distance between leftmost and rightmost points)
-            L = abs(points[len(points)-1][0] - points[0][0])
+            # L = abs(points[len(points)-1][0] - points[0][0])
+            L = abs(points[self.right_most ][0] - points[self.left_most][0])
             
             # Calculate bounding box
             x = max(Ec[0] - (self.horizontal_margin/2) * L, 0)
@@ -124,6 +115,12 @@ class FacialLandmark:
         # Extract the bounding boxes' dimensions
         left_x, left_y, left_w, left_h = left_eye_bbox
         right_x, right_y, right_w, right_h = right_eye_bbox
+
+        # # Print debugging information
+        # print(f"Left Eye BBox: x={left_x}, y={left_y}, w={left_w}, h={left_h}")
+        # print(f"Right Eye BBox: x={right_x}, y={right_y}, w={right_w}, h={right_h}")
+        # print(f"New Left Eye Shape: {new_left_eye.shape}")
+        # print(f"New Right Eye Shape: {new_right_eye.shape}")
 
         # Resize the new eye regions to match the original bounding box sizes
         new_left_eye_resized = cv2.resize(new_left_eye, (left_w, left_h))

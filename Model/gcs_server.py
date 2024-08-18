@@ -14,6 +14,8 @@ import pyvirtualcam # type: ignore
 from Model.model import Generator, Discriminator
 from Model.facial_landmark import FacialLandmark
 
+from Model.transformation import Transformation
+
 CAMERA_VIDEO_SWITCH = 0
 
 # input_video_path = './testVideos/SampleFile_720.mp4'
@@ -23,11 +25,12 @@ output_video_path = './output_video.mp4'
 class GazeCorrSys_server():
     def __init__(self):
         self.cap = None
-        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0715'
+        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_S_0818'
         self.generator, self.discriminator = self.loadCheckPoint()
         self.facial_landmark_ex = FacialLandmark()
         self.image_width = 64
         self.image_height = 48
+        self.trans = Transformation()
 
     # Function to preprocess the input image
     def preprocess_image(self, image):
@@ -172,12 +175,44 @@ class GazeCorrSys_server():
                 landmarks_l = tf.cast(left_eye_landmarks, tf.float32) 
                 landmarks_r = tf.cast(right_eye_landmarks, tf.float32)
                 landmarks_batch = tf.concat([tf.expand_dims(landmarks_l, axis=0), tf.expand_dims(landmarks_r, axis=0)], axis=0)
-                predictions = self.generator(input_images, pose, gaze_targets, landmarks_batch, training=False)
+                corr_flow, corr_brightness_map = self.generator(input_images, pose, gaze_targets, landmarks_batch, training=False)
+                warped_images = self.trans.apply_transformation(corr_flow, input_images, 3)
+                predictions = self.trans.apply_lcm(warped_images, corr_brightness_map)
+
                 output_image_l = self.postprocess_image(predictions[0])
                 output_image_r = self.postprocess_image(predictions[1])
                 self.facial_landmark_ex.replace_eye_regions(output_frame, face_landmarks[0], output_image_l, output_image_r)
 
-            # _, gaze_p = self.discriminator(input_images, pose, training=False)
+                ##############################################################################################
+                _, gaze_p, gaze_dir = self.discriminator(input_images, pose, landmarks_batch, training=False)
+                gaze_direction = gaze_p * gaze_dir
+                gaze_direction = gaze_direction.numpy().reshape(-1, 2)
+
+                # Calculate the eye center for the left and right eyes separately
+                left_eye_points, right_eye_points = self.facial_landmark_ex.extract_eye_points(output_frame, face_landmarks[0])
+                eye_center_l = left_eye_points[0]#np.mean(left_eye_points.numpy(), axis=0).astype(int)
+                eye_center_r = right_eye_points[0]#np.mean(right_eye_points.numpy(), axis=0).astype(int)
+
+                # Calculate the end points for the gaze direction
+                end_point_l = (eye_center_l[0] + int(gaze_direction[0, 0] * 50),
+                            eye_center_l[1] - int(gaze_direction[0, 1] * 50))
+                end_point_r = (eye_center_r[0] + int(gaze_direction[1, 0] * 50),
+                            eye_center_r[1] - int(gaze_direction[1, 1] * 50))
+
+                # Draw the gaze direction on the frame
+                cv2.arrowedLine(output_frame, tuple(eye_center_l), end_point_l, (0, 255, 0), 2)
+                cv2.arrowedLine(output_frame, tuple(eye_center_r), end_point_r, (0, 255, 0), 2)
+
+                gaze_text_l = f"Gaze L: ({gaze_direction[0, 0]:.2f}, {gaze_direction[0, 1]:.2f})"
+                gaze_text_r = f"Gaze R: ({gaze_direction[1, 0]:.2f}, {gaze_direction[1, 1]:.2f})"
+
+                cv2.putText(output_frame, gaze_text_l, (eye_center_l[0] + 10, eye_center_l[1] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+                cv2.putText(output_frame, gaze_text_r, (eye_center_r[0] + 10, eye_center_r[1] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+                ##############################################################################################
+
+
             self.draw_annotations(frame_rgb, x, y, z)
             
         self.draw_output_annotations(output_frame, gaze_corr_flag)

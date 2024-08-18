@@ -7,6 +7,10 @@ import numpy as np # type: ignore
 from Model.model import Generator, Discriminator
 from processingDataset import ProcessingDataset
 
+from tensorflow.keras import backend as K
+
+from Model.transformation import Transformation
+
 LOAD_DATA_DIR_PKL_SWITCH = 1
 
 class Test:
@@ -16,10 +20,16 @@ class Test:
         # self.imgFilePath = './preprocessing_dataset_CelebA/0/left/anna-jackson-2.jpg'
         # self.imgInfoPath = './preprocessing_dataset_CelebA/0/info/left/anna-jackson-2.txt'
 
-        self.file_path_l = './DataSets/training_inputs_U2/left_data.pkl'
-        self.file_path_r = './DataSets/training_inputs_U2/right_data.pkl'
+        # self.file_path_l = './DataSets/training_inputs_COL_0813/left_data.pkl'
+        # self.file_path_r = './DataSets/training_inputs_COL_0813/right_data.pkl'
+        self.file_path_l = './DataSets/training_inputs_U2_0818/left_data.pkl'
+        self.file_path_r = './DataSets/training_inputs_U2_0818/right_data.pkl'
 
-        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0809'
+
+        # self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_0809'
+        self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_S_0818'
+        # self.checkpoint_dir = './TrainingCheckPoints/training_checkpoints_N_0813'
+        self.trans = Transformation()
 
     def loadData(self):
         process_dataset = ProcessingDataset()
@@ -53,7 +63,7 @@ class Test:
         test_data = process_dataset.load_pickle_data(self.file_path_l)
         test_dataset = process_dataset.create_dataset(test_data, batch_size)
 
-        for (img_t, p_t, gaze_target, landmarks_t), (img, p, gaze_real, landmarks) in test_dataset.take(1):
+        for (img_t, p_t, gaze_target, landmarks_t, weightMapEyeball_t, mg_t), (img, p, gaze_real, landmarks, weightMapEyeball, mg), weightMap in test_dataset.take(1):
             break
 
         img = tf.cast(img, tf.float32)
@@ -62,7 +72,7 @@ class Test:
         gaze_target = tf.cast(gaze_target, tf.float32)
         gaze_real = tf.cast(gaze_real, tf.float32)
 
-        return img, p, gaze_target, landmarks
+        return img, p, gaze_target, landmarks, img_t
 
 
     def plotIMGs(self, test_image, generated_image):
@@ -75,6 +85,24 @@ class Test:
         axes[1].imshow(generated_image[0].numpy())
         axes[1].set_title("Generated Image")
         axes[1].axis('off')
+
+        plt.savefig('./result_CA.png')
+        plt.close(fig)
+
+    def plotIMGs_target(self, test_image, target_image, generated_image):
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+            
+        axes[0].imshow(test_image[0].numpy())
+        axes[0].set_title("Original Image")
+        axes[0].axis('off')
+
+        axes[1].imshow(target_image[0].numpy())
+        axes[1].set_title("Target Image")
+        axes[1].axis('off')
+
+        axes[2].imshow(generated_image[0].numpy())
+        axes[2].set_title("Generated Image")
+        axes[2].axis('off')
 
         plt.savefig('./result_CA.png')
         plt.close(fig)
@@ -102,16 +130,42 @@ class Test:
         if LOAD_DATA_DIR_PKL_SWITCH == 0:
             test_image, pose, gaze_target, landmarks = self.loadData()
         else:
-            test_image, pose, gaze_target, landmarks = self.loadDataFromPKL()
+            test_image, pose, gaze_target, landmarks, target_image = self.loadDataFromPKL()
         
         # Generate the output image
-        generated_image = generator(test_image, pose, gaze_target, landmarks, training=False)
+        corr_flow, corr_brightness_map = generator(test_image, pose, gaze_target, landmarks, training=False)
+        warped_image = self.trans.apply_transformation(corr_flow, test_image, 3)
+        generated_image = self.trans.apply_lcm(warped_image, corr_brightness_map)
+
+        # dir
+        _, gaze_p, gaze_dir = discriminator(test_image, pose, landmarks, training=False)
+        gaze_p = gaze_p*gaze_dir
+        print('!!!!!!!!!!!!', gaze_p)
 
         test_image = (test_image + 1.0) / 2.0
         generated_image = (generated_image + 1.0) / 2.0
 
-        self.plotIMGs(test_image, generated_image)
+        if LOAD_DATA_DIR_PKL_SWITCH == 0:
+            self.plotIMGs(test_image, generated_image)
+        else:
+            target_image = (target_image + 1.0) / 2.0
+            self.plotIMGs_target(test_image, target_image, generated_image)
 
 if __name__ == '__main__':
+    if tf.config.list_physical_devices('GPU'):
+        # Sets the peak memory to the current memory.
+        tf.config.experimental.reset_memory_stats('GPU:0')
+        # Creates the first peak memory usage.
+        x1 = tf.ones(1000 * 1000, dtype=tf.float64)
+        del x1 # Frees the memory referenced by `x1`.
+        peak1 = tf.config.experimental.get_memory_info('GPU:0')['peak']
+        # Sets the peak memory to the current memory again.
+        tf.config.experimental.reset_memory_stats('GPU:0')
+        # Creates the second peak memory usage.
+        x2 = tf.ones(1000 * 1000, dtype=tf.float32)
+        del x2
+        peak2 = tf.config.experimental.get_memory_info('GPU:0')['peak']
+        assert peak2 < peak1  # tf.float32 consumes less memory than tf.float64.
+
     test = Test()
     test.run()
