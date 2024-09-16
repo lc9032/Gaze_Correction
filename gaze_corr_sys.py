@@ -1,3 +1,13 @@
+import os
+import logging
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
+from silence_tensorflow import silence_tensorflow
+silence_tensorflow("ERROR")
+
+
 import time
 from multiprocessing import Process
 
@@ -29,10 +39,10 @@ if __name__ == '__main__':
     # client_thread.join()
 
 
-    # gcsServer = GazeCorrSys_server()
-    # gcsServer.run()
+    gcsServer = GazeCorrSys_server()
+    gcsServer.run()
 
 
-    video_thread = Process(target=process_video)
-    video_thread.start()
-    video_thread.join()
+    # video_thread = Process(target=process_video)
+    # video_thread.start()
+    # video_thread.join()

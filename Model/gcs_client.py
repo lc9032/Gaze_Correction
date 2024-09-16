@@ -13,7 +13,7 @@ class GazeCorrSys_client():
     def client(self, host='127.0.0.1', port=9999):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, port))
-        video_capture = cv2.VideoCapture(0)  # Change to video file path if needed
+        video_capture = cv2.VideoCapture(1)  # Change to video file path if needed
 
         video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)

@@ -6,6 +6,7 @@ result*.*
 *.mp4
 *.aac
 *.sh
+*.json
 
 /__pycache__/
 /Model/__pycache__/
@@ -17,3 +18,4 @@ result*.*
 /VGG_HZ/
 /CBG/
 /DataSets*/
+/CodeForDoc*/

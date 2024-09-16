@@ -11,6 +11,8 @@ from Model.facial_landmark import FacialLandmark
 
 import matplotlib.pyplot as plt
 
+from collections import defaultdict
+
 
 class ProcessingDataset:
     def __init__(self):
@@ -20,10 +22,11 @@ class ProcessingDataset:
         self.base_dataset_folder = r"../DATA_SETS/C_DataSet/columbia_gaze_data_set/Columbia Gaze Data Set"
 
         # self.preprocessing_dataset_dir = './DataSets/preprocessing_dataset_COL_0814'
-        self.preprocessing_dataset_dir = './DataSets/preprocessing_dataset_U2_0817'
+        # self.preprocessing_dataset_dir = './DataSets/preprocessing_dataset_U2_0817'
+        self.preprocessing_dataset_dir = './DataSets/preprocessing_dataset_DIRL_0824'
 
         # self.save_pickle_path = './DataSets/training_inputs_COL_0817'
-        self.save_pickle_path = './DataSets/training_inputs_U2_0818'
+        self.save_pickle_path = './DataSets/training_inputs_DIRL_0908'
         # self.ignore_list = ['0008', '0010', '0011', '0016', '0024', '0025', '0043', '0053']
         # self.ignore_list = ['0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0010',
         #                     '0011', '0012', '0013', '0014', '0015', '0016', '0017', '0018', '0019', '0020',
@@ -247,6 +250,7 @@ class ProcessingDataset:
                 modified_file_name = file_name_without_extension + ".json"
                 modified_file_path = os.path.join(modified_dir_name, modified_file_name)
                 # eye_landmarks = self.read_landmarks_from_txt(modified_file_path)
+                # middle_gaze_point = (32,24)
                 eye_landmarks, middle_gaze_point = self.read_landmarks_from_json(modified_file_path)
 
                 for img_path_t in img_list:
@@ -261,9 +265,12 @@ class ProcessingDataset:
                     modified_file_name = file_name_without_extension + ".json"
                     modified_file_path = os.path.join(modified_dir_name, modified_file_name)
                     # eye_landmarks_t = self.read_landmarks_from_txt(modified_file_path)
+                    # middle_gaze_point_t = (32,24)
                     eye_landmarks_t, middle_gaze_point_t = self.read_landmarks_from_json(modified_file_path)
 
+
                     if person_id == person_id_t and head_pose == head_pose_t and gaze_h_t == 0 and gaze_v_t == 0:
+                        # and head_pose <= 5 and abs(gaze_h) <= 20 and abs(gaze_v) <= 5
                         data['img'].append(img)
                         data['p'].append(head_pose)
                         data['h'].append(gaze_h)
@@ -318,19 +325,31 @@ class ProcessingDataset:
 
     def save_as_pickle(self):
         # Process left eye images
-        left_img_list = glob.glob(self.preprocessing_dataset_dir + '/*/left/*.jpg')
-        left_img_list.sort()
-        self.create_pickle_data(left_img_list, self.save_pickle_path, 'left')
+        # left_img_list = glob.glob(self.preprocessing_dataset_dir + '/*/left/*.jpg')
+        # left_img_list.sort()
+        # self.create_pickle_data(left_img_list, self.save_pickle_path, 'left')
 
         # Process right eye images
         right_img_list = glob.glob(self.preprocessing_dataset_dir + '/*/right/*.jpg')
         right_img_list.sort()
         self.create_pickle_data(right_img_list, self.save_pickle_path, 'right')
     
-    def load_pickle_data(self, file_path):
-        with open(file_path, 'rb') as f:
-            data = pickle.load(f)
-        return data
+    def load_pickle_data(self, folder_path):
+        data_list = []
+
+        # List all files in the directory
+        for filename in os.listdir(folder_path):
+            # Check if the file is a .pkl file
+            if filename.endswith('.pkl'):
+                file_path = os.path.join(folder_path, filename)
+                # Load the pickle file
+                with open(file_path, 'rb') as file:
+                    data = pickle.load(file)
+                    # Append the loaded data to the data_list
+                    data_list.append(data)
+
+        return data_list
+    
 
     def preprocess_data(self, img, p, h, v, img_t, p_t, h_t, v_t, landmarks, landmarks_t, weightMap, weightMapEyeball, weightMapEyeball_t, mg, mg_t):
         
@@ -380,7 +399,7 @@ class ProcessingDataset:
         return dataset
 
     # Function to load and preprocess the image
-    def load_and_preprocess_image(self, image_path, target_size=(32, 64)):
+    def load_and_preprocess_image(self, image_path, target_size=(48, 64)):
         image = tf.io.read_file(image_path)
         image = tf.image.decode_jpeg(image, channels=3)
         image = tf.image.resize(image, target_size)
