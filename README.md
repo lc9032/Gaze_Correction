@@ -1,13 +1,15 @@
 # Real-Time Gaze Correction in Video Conferencing Using Deep Learning
+
 This project implements a Gaze Redirection system.
 The system processes datasets for training, trains a gaze redirection model, and provides real-time gaze correction using a webcam or video feed.
 
 
 ## Requirements
 
+### Environmental setup:
 
-### Environmental setup
 Make sure to have the following CUDA, cuDNN, Python versions installed:
+
 ---
 | Library      | Version  |
 |--------------|----------|
@@ -17,7 +19,9 @@ Make sure to have the following CUDA, cuDNN, Python versions installed:
 ---
 
 ### Required packages:
+
 Ensure you have the necessary dependencies installed. You can install the required libraries using requirements.txt or manually install them.
+
 ---
 | Library      | Version  |
 |--------------|----------|
@@ -58,7 +62,7 @@ Once you have set the appropriate dataset, the script will:
 2. Normalize and resize images.
 3. Create input pairs for training the gaze redirection model.
 
-
+---
 
 ### Training the Model
 The model training is managed via train.py. It uses the preprocessed datasets and trains the model to redirect gaze in the images.
@@ -81,17 +85,17 @@ self.batch_size = 256  # Adjust the batch size
 self.epochs = 200      # Set the number of epochs
 ```
 
-
+---
 
 ### Real-Time Gaze Correction System
 
 The real-time gaze correction system is implemented in gaze_corr_sys.py. It uses the trained model to correct the gaze of a person in a webcam feed or video stream in real time.
 
 #### Key Features
-1. Webcam Integration: The system captures frames from the webcam, applies the trained model to adjust the gaze direction, and displays the modified frames.
-2. Virtual Camera Support: You can use the pyvirtualcam library to output the adjusted video stream to a virtual camera, which can be used in video calls or other applications.
+- Webcam Integration: The system captures frames from the webcam, applies the trained model to adjust the gaze direction, and displays the modified frames.
+- Virtual Camera Support: You can use the pyvirtualcam library to output the adjusted video stream to a virtual camera, which can be used in video calls or other applications.
 
-###Running the Real-Time System
+### Running the Real-Time System
 Make sure the model has been trained and saved as a checkpoint. Then, you can run the real-time gaze correction system as follows:
 
 ```python
