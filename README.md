@@ -7,9 +7,11 @@ The system processes datasets for training, trains a gaze redirection model, and
 
 Make sure to have the following CUDA, cuDNN, Python versions installed:
 
-CUDA: 11.8
-cuDNN: 8.6.0
-Python: 3.11.9
+---
+| CUDA         | 11.8     |
+| cuDNN        | 8.6.0    |
+| Python       | 3.11.9   |
+---
 
 ### Software Libraries:
 ---
