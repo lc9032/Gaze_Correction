@@ -5,16 +5,19 @@ The system processes datasets for training, trains a gaze redirection model, and
 
 ## Requirements
 
-Make sure to have the following CUDA, cuDNN, Python versions installed:
 
+### Environmental setup
+Make sure to have the following CUDA, cuDNN, Python versions installed:
 ---
+| Library      | Version  |
 |--------------|----------|
 | CUDA         | 11.8     |
 | cuDNN        | 8.6.0    |
 | Python       | 3.11.9   |
 ---
 
-### Software Libraries:
+### Required packages:
+Ensure you have the necessary dependencies installed. You can install the required libraries using requirements.txt or manually install them.
 ---
 | Library      | Version  |
 |--------------|----------|
@@ -25,16 +28,16 @@ Make sure to have the following CUDA, cuDNN, Python versions installed:
 | NumPy        | 1.24.3   |
 ---
 
-Ensure you have the necessary dependencies installed. You can install the required libraries using requirements.txt or manually install them.
-
 ```python
 pip install -r requirements.txt
 ```
 
-## Dataset Processing
+## Usage
+
+### Dataset Processing
 The dataset processing is handled by `processingDataset.py`. This script is responsible for loading and preprocessing various gaze datasets that are used to train the model.
 
-### Supported Datasets
+#### Supported Datasets
 
 The script supports different datasets via a `DATASET` switch, which needs to be set based on the dataset being used.
 
@@ -57,10 +60,10 @@ Once you have set the appropriate dataset, the script will:
 
 
 
-## Training the Model
+### Training the Model
 The model training is managed via train.py. It uses the preprocessed datasets and trains the model to redirect gaze in the images.
 
-### Steps for Training
+#### Steps for Training
 1. Dataset Setup: Make sure you’ve preprocessed the correct dataset as explained in the Dataset Processing section.
 2. Model Training: Run the train.py script to start training.
 
@@ -70,7 +73,7 @@ python train.py
 
 3. Checkpointing: The script automatically saves model checkpoints at each epoch for easy resumption of training.
 
-### Model Parameters
+#### Model Parameters
 You can adjust key training parameters such as batch_size, learning_rate, and the number of epochs in train.py:
 
 ```python
@@ -80,11 +83,11 @@ self.epochs = 200      # Set the number of epochs
 
 
 
-## Real-Time Gaze Correction System
+### Real-Time Gaze Correction System
 
 The real-time gaze correction system is implemented in gaze_corr_sys.py. It uses the trained model to correct the gaze of a person in a webcam feed or video stream in real time.
 
-### Key Features
+#### Key Features
 1. Webcam Integration: The system captures frames from the webcam, applies the trained model to adjust the gaze direction, and displays the modified frames.
 2. Virtual Camera Support: You can use the pyvirtualcam library to output the adjusted video stream to a virtual camera, which can be used in video calls or other applications.
 
