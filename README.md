@@ -10,19 +10,16 @@ The system processes datasets for training, trains a gaze redirection model, and
 
 Make sure to have the following CUDA, cuDNN, Python versions installed:
 
----
 | Library      | Version  |
 |--------------|----------|
 | CUDA         | 11.8     |
 | cuDNN        | 8.6.0    |
 | Python       | 3.11.9   |
----
 
 ### Required packages:
 
 Ensure you have the necessary dependencies installed. You can install the required libraries using requirements.txt or manually install them.
 
----
 | Library      | Version  |
 |--------------|----------|
 | TensorFlow   | 2.13.1   |
@@ -30,11 +27,12 @@ Ensure you have the necessary dependencies installed. You can install the requir
 | Mediapipe    | 0.10.14  |
 | PyVirtualCam | 0.11.1   |
 | NumPy        | 1.24.3   |
----
 
 ```python
 pip install -r requirements.txt
 ```
+
+---
 
 ## Usage
 
