@@ -1,16 +1,32 @@
-# Gaze Correction
-
+# Real-Time Gaze Correction in Video Conferencing Using Deep Learning
 This project implements a Gaze Redirection system.
 The system processes datasets for training, trains a gaze redirection model, and provides real-time gaze correction using a webcam or video feed.
 
 
 ## Requirements
-Before running the scripts, ensure you have the necessary dependencies installed. You can install the required libraries using requirements.txt or manually install them.
+
+Make sure to have the following CUDA, cuDNN, Python versions installed:
+
+CUDA: 11.8
+cuDNN: 8.6.0
+Python: 3.11.9
+
+### Software Libraries:
+---
+| Library      | Version  |
+|--------------|----------|
+| TensorFlow   | 2.13.1   |
+| OpenCV       | 4.10.0   |
+| Mediapipe    | 0.10.14  |
+| PyVirtualCam | 0.11.1   |
+| NumPy        | 1.24.3   |
+---
+
+Ensure you have the necessary dependencies installed. You can install the required libraries using requirements.txt or manually install them.
 
 ```python
 pip install -r requirements.txt
 ```
-
 
 ## Dataset Processing
 The dataset processing is handled by `processingDataset.py`. This script is responsible for loading and preprocessing various gaze datasets that are used to train the model.
