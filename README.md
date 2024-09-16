@@ -9,6 +9,7 @@ Before running the scripts, ensure you have the necessary dependencies installed
 
 ```python
 pip install -r requirements.txt
+```
 
 
 ## Dataset Processing
@@ -26,6 +27,7 @@ You need to modify the `DATASET` variable in `processingDataset.py` to use the c
 
 ```python
 DATASET = 2  # Change this value to 0, 1, or 2 depending on the dataset
+```
 
 
 Once you have set the appropriate dataset, the script will:
@@ -45,6 +47,7 @@ The model training is managed via train.py. It uses the preprocessed datasets an
 
 ```python
 python train.py
+```
 
 3. Checkpointing: The script automatically saves model checkpoints at each epoch for easy resumption of training.
 
@@ -54,6 +57,7 @@ You can adjust key training parameters such as batch_size, learning_rate, and th
 ```python
 self.batch_size = 256  # Adjust the batch size
 self.epochs = 200      # Set the number of epochs
+```
 
 
 
@@ -70,3 +74,4 @@ Make sure the model has been trained and saved as a checkpoint. Then, you can ru
 
 ```python
 python gaze_corr_sys.py
+```
